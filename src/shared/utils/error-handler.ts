@@ -1,4 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
+import { logger } from '@/infrastructure/logging';
 
 /**
  * Application Error Classes for GangGPT
@@ -84,16 +85,14 @@ export function createErrorHandler() {
     res: Response,
     _next: NextFunction
   ): void => {
-    // Log error details (using structured logging in production)
-    if (process.env.NODE_ENV !== 'production') {
-      console.error({
-        error: err.message,
-        stack: err.stack,
-        url: req.url,
-        method: req.method,
-        timestamp: new Date().toISOString(),
-      });
-    }
+    // Log error details using structured logging
+    logger.error({
+      error: err.message,
+      stack: err.stack,
+      url: req.url,
+      method: req.method,
+      timestamp: new Date().toISOString(),
+    });
 
     // Handle operational errors
     if (isOperationalError(err)) {

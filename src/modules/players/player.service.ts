@@ -10,6 +10,13 @@ interface RegisterPlayerData {
   password: string;
 }
 
+interface RegisterPlayerResponse {
+  id: string;
+  username: string;
+  email: string;
+  registeredAt: Date;
+}
+
 interface CreateCharacterData {
   name: string;
   userId: string;
@@ -34,7 +41,7 @@ export class PlayerService {
     this.prisma = prismaClient;
   }
 
-  async registerPlayer(data: RegisterPlayerData) {
+  async registerPlayer(data: RegisterPlayerData): Promise<RegisterPlayerResponse> {
     try {
       // Check if user already exists
       const existingUser = await this.prisma.user.findFirst({

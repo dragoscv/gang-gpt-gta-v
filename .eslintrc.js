@@ -70,8 +70,7 @@ module.exports = {
 
     // Prettier Integration
     'prettier/prettier': 'error',
-  },
-  ignorePatterns: [
+  },  ignorePatterns: [
     'dist/',
     'node_modules/',
     'coverage/',
@@ -79,6 +78,8 @@ module.exports = {
     'prisma/migrations/',
     '*.js',
     'web/',
+    '**/*.test.ts',
+    '**/*.spec.ts',
   ],
   overrides: [
     {
