@@ -1,0 +1,33 @@
+{
+  "maxplayers": 1000,
+  "name": "GangGPT - AI-Powered Roleplay Server",
+  "gamemode": "Gang AI Roleplay",
+  "stream-distance": 400.0,
+  "announce": true,
+  "bind": "0.0.0.0:22005",
+  "language": "en",
+  "website": "https://ganggpt.io",
+  "description": ["Advanced AI-powered GTA V roleplay with dynamic factions, intelligent NPCs, and immersive storytelling."],
+  "icon": "",
+  "modules": [
+    "NodeJS"
+  ],
+  "plugins": [],
+  "resource-scan-thread-limit": 50,
+  "max-ping": 120,
+  "min-fps": 24,
+  "max-packet-loss": 0.2,
+  "allow-cef-debugging": false,
+  "csharp": "enabled",
+  "enable-http-security": false,
+  "voice-chat": false,
+  "voice-chat-sample-rate": 24000,
+  "fastdl": {
+    "host": "",
+    "path": "/"
+  },
+  "disable-client-packages-ram-cache": false,
+  "client-packages-shared-folder": "client_packages/shared",
+  "limit-time-file-check": 5,
+  "token": ""
+}

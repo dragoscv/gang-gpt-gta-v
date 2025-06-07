@@ -1,0 +1,16 @@
+{
+  "/_not-found/page": "app/_not-found/page.js",
+  "/auth/forgot-password/page": "app/auth/forgot-password/page.js",
+  "/api/test-backend/route": "app/api/test-backend/route.js",
+  "/auth/register/page": "app/auth/register/page.js",
+  "/auth/login/page": "app/auth/login/page.js",
+  "/auth/reset-password/page": "app/auth/reset-password/page.js",
+  "/dashboard/page": "app/dashboard/page.js",
+  "/companions/page": "app/companions/page.js",
+  "/legal/privacy/page": "app/legal/privacy/page.js",
+  "/legal/terms/page": "app/legal/terms/page.js",
+  "/page": "app/page.js",
+  "/factions/page": "app/factions/page.js",
+  "/support/page": "app/support/page.js",
+  "/settings/page": "app/settings/page.js"
+}

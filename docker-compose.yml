@@ -1,0 +1,219 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: ganggpt-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ganggpt
+      POSTGRES_PASSWORD: ganggpt_dev_password
+      POSTGRES_DB: ganggpt_development
+      POSTGRES_INITDB_ARGS: '--encoding=UTF8 --locale=C'
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./scripts/init-db.sql:/docker-entrypoint-initdb.d/init-db.sql:ro
+    ports:
+      - '5432:5432'
+    networks:
+      - ganggpt-network
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U ganggpt -d ganggpt_development']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: ganggpt-redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes --requirepass redis_dev_password
+    volumes:
+      - redis_data:/data
+    ports:
+      - '6379:6379'
+    networks:
+      - ganggpt-network
+    healthcheck:
+      test: ['CMD', 'redis-cli', '--raw', 'incr', 'ping']
+      interval: 10s
+      timeout: 3s
+      retries: 5
+  # GangGPT Application (Development)
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: builder
+    container_name: ganggpt-app
+    restart: unless-stopped
+    environment:
+      NODE_ENV: development
+      DATABASE_URL: postgresql://ganggpt:ganggpt_dev_password@postgres:5432/ganggpt_development
+      REDIS_URL: redis://:redis_dev_password@redis:6379
+      JWT_SECRET: dev_jwt_secret_change_in_production
+      BCRYPT_ROUNDS: 10
+      AZURE_OPENAI_API_KEY: ${AZURE_OPENAI_API_KEY}
+      AZURE_OPENAI_ENDPOINT: ${AZURE_OPENAI_ENDPOINT}
+      AZURE_OPENAI_API_VERSION: ${AZURE_OPENAI_API_VERSION}
+      AZURE_OPENAI_MODEL: ${AZURE_OPENAI_MODEL}
+      RAGE_MP_HOST: 0.0.0.0
+      RAGE_MP_PORT: 22005
+      API_PORT: 3001
+      FRONTEND_PORT: 3000
+      ENABLE_CORS: true
+      CORS_ORIGINS: http://localhost:3000,http://localhost:3002
+      RATE_LIMIT_WINDOW_MS: 900000
+      RATE_LIMIT_MAX_REQUESTS: 100
+      LOG_LEVEL: debug
+      FEATURE_FLAGS: ai_companions:true,dynamic_missions:true,faction_wars:true
+    volumes:
+      - .:/app
+      - /app/node_modules
+      - /app/web/node_modules
+      - logs_data:/app/logs
+    ports:
+      - '3001:3001'  # Backend API
+      - '3000:3000'  # Frontend
+      - '22005:22005' # RAGE:MP
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - ganggpt-network
+    develop:
+      watch:
+        - action: sync
+          path: ./src
+          target: /app/src
+          ignore:
+            - node_modules/
+        - action: sync
+          path: ./web/app
+          target: /app/web/app
+          ignore:
+            - node_modules/
+        - action: rebuild
+          path: package.json
+        - action: rebuild
+          path: web/package.json
+
+  # Adminer for Database Management (Development)
+  adminer:
+    image: adminer:4.8.1
+    container_name: ganggpt-adminer
+    restart: unless-stopped
+    environment:
+      ADMINER_DEFAULT_SERVER: postgres
+      ADMINER_DESIGN: dracula
+    ports:
+      - '8080:8080'
+    depends_on:
+      - postgres
+    networks:
+      - ganggpt-network
+    profiles:
+      - tools
+
+  # Redis Commander for Cache Management (Development)
+  redis-commander:
+    image: rediscommander/redis-commander:latest
+    container_name: ganggpt-redis-commander
+    restart: unless-stopped
+    environment:
+      REDIS_HOSTS: local:redis:6379:0:redis_dev_password
+      HTTP_USER: admin
+      HTTP_PASSWORD: admin
+    ports:
+      - '8081:8081'
+    depends_on:
+      - redis
+    networks:
+      - ganggpt-network
+    profiles:
+      - tools
+
+  # Nginx Reverse Proxy (Production-like)
+  nginx:
+    image: nginx:alpine
+    container_name: ganggpt-nginx
+    restart: unless-stopped
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/conf.d:/etc/nginx/conf.d:ro
+      - nginx_logs:/var/log/nginx
+    ports:
+      - '80:80'
+      - '443:443'
+    depends_on:
+      - app
+    networks:
+      - ganggpt-network
+    profiles:
+      - production
+
+  # Prometheus for Metrics (Monitoring)
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: ganggpt-prometheus
+    restart: unless-stopped
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--storage.tsdb.retention.time=200h'
+      - '--web.enable-lifecycle'
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    ports:
+      - '9090:9090'
+    networks:
+      - ganggpt-network
+    profiles:
+      - monitoring
+
+  # Grafana for Dashboards (Monitoring)
+  grafana:
+    image: grafana/grafana:latest
+    container_name: ganggpt-grafana
+    restart: unless-stopped
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin
+      GF_USERS_ALLOW_SIGN_UP: false
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
+    ports:
+      - '3001:3000'
+    depends_on:
+      - prometheus
+    networks:
+      - ganggpt-network
+    profiles:
+      - monitoring
+
+networks:
+  ganggpt-network:
+    driver: bridge
+    name: ganggpt-network
+
+volumes:
+  postgres_data:
+    name: ganggpt-postgres-data
+  redis_data:
+    name: ganggpt-redis-data
+  logs_data:
+    name: ganggpt-logs-data
+  nginx_logs:
+    name: ganggpt-nginx-logs
+  prometheus_data:
+    name: ganggpt-prometheus-data
+  grafana_data:
+    name: ganggpt-grafana-data

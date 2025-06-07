@@ -1,0 +1,13 @@
+fix(stats): resolve statistics component and API client issues
+
+- Fix React hydration errors in statistics component
+- Correct API URL construction in tRPC client
+- Add proper error handling and loading states
+- Improve Redis connection with timeouts and fallbacks
+- Enhance type safety across components
+- Add comprehensive test coverage (unit, integration, E2E)
+
+All statistics now display correctly and are fully tested with Jest and Playwright.
+
+Closes #123, #124
+Addresses #125
