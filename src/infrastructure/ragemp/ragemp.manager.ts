@@ -3,6 +3,8 @@
  * Real RAGE:MP server integration for GTA V multiplayer
  */
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 import { EventEmitter } from 'events';
 import { logger } from '@/infrastructure/logging';
 import { cache } from '@/infrastructure/cache';
@@ -569,7 +571,7 @@ export class RageMPManager extends EventEmitter {
   /**
    * Get world instance
    */
-  getWorld() {
+  getWorld(): any {
     return mp.world;
   }
 

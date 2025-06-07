@@ -1,7 +1,9 @@
 /**
  * RAGE:MP Type Declarations
  * Basic type definitions for RAGE:MP server-side API
+ * Note: RAGE:MP APIs are inherently dynamic and require any types
  */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 declare global {
   namespace Mp {

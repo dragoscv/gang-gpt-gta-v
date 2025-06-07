@@ -1,7 +1,9 @@
 /**
  * Enhanced RAGE:MP Type Definitions for GangGPT
  * Provides type safety and additional properties for RAGE:MP entities
+ * Note: RAGE:MP APIs are inherently dynamic and require any types
  */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 // Import RAGE:MP declarations
 import './ragemp.d.ts';

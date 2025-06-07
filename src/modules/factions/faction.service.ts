@@ -156,7 +156,10 @@ export class FactionService {
     }
   }
 
-  async removeMemberFromFaction(characterId: string, factionId: string) {
+  async removeMemberFromFaction(
+    characterId: string,
+    factionId: string
+  ): Promise<void> {
     try {
       await this.prisma.factionMembership.updateMany({
         where: {
@@ -192,7 +195,24 @@ export class FactionService {
     }
   }
 
-  async updateFactionInfluence(factionId: string, influenceChange: number) {
+  async updateFactionInfluence(
+    factionId: string,
+    influenceChange: number
+  ): Promise<{
+    name: string;
+    id: string;
+    description: string | null;
+    type: string;
+    influence: number;
+    territory: string | null;
+    color: string;
+    isActive: boolean;
+    leaderId: string | null;
+    aiPersonality: string | null;
+    createdAt: Date;
+    updatedAt: Date;
+    deletedAt: Date | null;
+  }> {
     try {
       const faction = await this.prisma.faction.update({
         where: { id: factionId },
@@ -220,7 +240,8 @@ export class FactionService {
     }
   }
 
-  async getFactionById(factionId: string) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  async getFactionById(factionId: string): Promise<any | null> {
     try {
       const faction = await this.prisma.faction.findUnique({
         where: { id: factionId },
@@ -254,7 +275,8 @@ export class FactionService {
     }
   }
 
-  async getAllFactions() {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  async getAllFactions(): Promise<any[]> {
     try {
       const factions = await this.prisma.faction.findMany({
         where: {
@@ -299,7 +321,7 @@ export class FactionService {
     }
   }
 
-  async processAIDecisions() {
+  async processAIDecisions(): Promise<void> {
     try {
       const factions = await this.getAllFactions();
 
@@ -398,7 +420,7 @@ export class FactionService {
   private async executeAIDecision(
     factionId: string,
     decision: FactionAIDecision
-  ) {
+  ): Promise<void> {
     try {
       // Log the AI decision as a faction event
       await this.prisma.factionEvent.create({

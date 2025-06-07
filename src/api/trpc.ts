@@ -8,6 +8,7 @@ import { Request, Response } from 'express';
 import superjson from 'superjson';
 import * as jwt from 'jsonwebtoken';
 import { JwtPayload } from 'jsonwebtoken';
+import { logger } from '../infrastructure/logging';
 import { PrismaClient } from '@prisma/client';
 import { db } from '../infrastructure/database';
 import config from '../config';
@@ -100,7 +101,7 @@ export const createTRPCContext = async ({
       }
     } catch (error) {
       // Invalid token - context.user remains undefined
-      console.warn('Invalid JWT token:', error);
+      logger.warn('Invalid JWT token:', error);
     }
   }
 

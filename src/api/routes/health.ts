@@ -16,7 +16,7 @@ interface HealthStatus {
     [key: string]: {
       status: 'up' | 'down' | 'degraded';
       responseTime: number;
-      details?: any;
+      details?: Record<string, unknown>;
       error?: string;
     };
   };
@@ -59,7 +59,7 @@ export class HealthCheckService {
   private async checkDatabase(): Promise<{
     status: 'up' | 'down' | 'degraded';
     responseTime: number;
-    details?: any;
+    details?: Record<string, unknown>;
     error?: string;
   }> {
     const start = performance.now();
@@ -117,7 +117,7 @@ export class HealthCheckService {
   private async checkRedis(): Promise<{
     status: 'up' | 'down' | 'degraded';
     responseTime: number;
-    details?: any;
+    details?: Record<string, unknown>;
     error?: string;
   }> {
     const start = performance.now();
@@ -193,7 +193,7 @@ export class HealthCheckService {
   private async checkAIService(): Promise<{
     status: 'up' | 'down' | 'degraded';
     responseTime: number;
-    details?: any;
+    details?: Record<string, unknown>;
     error?: string;
   }> {
     const start = performance.now();
@@ -243,7 +243,18 @@ export class HealthCheckService {
 
   /**
    * Get system metrics
-   */ private getSystemMetrics() {
+   */
+  private getSystemMetrics(): {
+    memory: {
+      used: number;
+      total: number;
+      percentage: number;
+    };
+    cpu: {
+      percentage: number;
+    };
+    uptime: number;
+  } {
     const memUsage = process.memoryUsage();
     const cpuUsage = process.cpuUsage();
 
@@ -258,6 +269,7 @@ export class HealthCheckService {
           Number(cpuUsage.user + cpuUsage.system) / 1000000
         ), // Convert to percentage
       },
+      uptime: Math.round(process.uptime()),
     };
   }
   /**

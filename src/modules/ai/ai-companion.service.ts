@@ -1,3 +1,9 @@
+/**
+ * AI Companion Service
+ * Note: AI responses are dynamic and some any types are necessary for flexibility
+ */
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 import { PrismaClient } from '@prisma/client';
 import { CacheManager } from '../../infrastructure/cache';
 import { logger } from '../../infrastructure/logging';

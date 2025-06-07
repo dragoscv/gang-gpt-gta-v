@@ -34,6 +34,76 @@ interface UpdateCharacterData {
   positionZ?: number;
 }
 
+interface CharacterSummary {
+  money: number;
+  level: number;
+  experience: number;
+}
+
+interface CharacterWithFaction {
+  id: string;
+  name: string;
+  userId: string;
+  health: number;
+  armor: number;
+  money: number;
+  bank: number;
+  level: number;
+  experience: number;
+  positionX: number;
+  positionY: number;
+  positionZ: number;
+  isOnline: boolean;
+  lastSeen: Date | null;
+  createdAt: Date;
+  updatedAt: Date;
+  deletedAt: Date | null;
+  factionMembership?: {
+    faction: {
+      id: string;
+      name: string;
+    };
+  } | null;
+}
+
+interface PlayerStatistics {
+  user: {
+    id: string;
+    username: string;
+    email: string;
+    registeredAt: Date;
+    lastLogin: Date | null;
+    isActive: boolean;
+    totalCharacters: number;
+  };
+  statistics: {
+    totalMoney: number;
+    highestLevel: number;
+    totalExperience: number;
+  };
+  characters: CharacterSummary[];
+}
+
+interface CharacterBase {
+  id: string;
+  name: string;
+  userId: string;
+  health: number;
+  armor: number;
+  money: number;
+  bank: number;
+  level: number;
+  experience: number;
+  positionX: number;
+  positionY: number;
+  positionZ: number;
+  isOnline: boolean;
+  lastSeen: Date | null;
+  createdAt: Date;
+  updatedAt: Date;
+  deletedAt: Date | null;
+}
+
 export class PlayerService {
   private prisma: PrismaClient;
 
@@ -41,7 +111,9 @@ export class PlayerService {
     this.prisma = prismaClient;
   }
 
-  async registerPlayer(data: RegisterPlayerData): Promise<RegisterPlayerResponse> {
+  async registerPlayer(
+    data: RegisterPlayerData
+  ): Promise<RegisterPlayerResponse> {
     try {
       // Check if user already exists
       const existingUser = await this.prisma.user.findFirst({
@@ -89,7 +161,18 @@ export class PlayerService {
     }
   }
 
-  async authenticatePlayer(username: string, password: string) {
+  async authenticatePlayer(
+    username: string,
+    password: string
+  ): Promise<{
+    token: string;
+    user: {
+      id: string;
+      username: string;
+      email: string;
+      lastLogin: Date;
+    };
+  }> {
     try {
       // Find user by username or email
       const user = await this.prisma.user.findFirst({
@@ -149,7 +232,7 @@ export class PlayerService {
     }
   }
 
-  async getPlayerCharacters(userId: string) {
+  async getPlayerCharacters(userId: string): Promise<CharacterWithFaction[]> {
     try {
       const characters = await this.prisma.character.findMany({
         where: {
@@ -175,7 +258,9 @@ export class PlayerService {
     }
   }
 
-  async getCharacterById(characterId: string) {
+  async getCharacterById(
+    characterId: string
+  ): Promise<CharacterWithFaction | null> {
     try {
       const character = await this.prisma.character.findFirst({
         where: {
@@ -203,7 +288,7 @@ export class PlayerService {
     }
   }
 
-  async createCharacter(data: CreateCharacterData) {
+  async createCharacter(data: CreateCharacterData): Promise<CharacterBase> {
     try {
       const character = await this.prisma.character.create({
         data: {
@@ -229,7 +314,10 @@ export class PlayerService {
     }
   }
 
-  async updateCharacter(characterId: string, updates: UpdateCharacterData) {
+  async updateCharacter(
+    characterId: string,
+    updates: UpdateCharacterData
+  ): Promise<CharacterBase> {
     try {
       const character = await this.prisma.character.update({
         where: { id: characterId },
@@ -249,9 +337,12 @@ export class PlayerService {
       throw error;
     }
   }
-  async setCharacterOnline(characterId: string, isOnline: boolean) {
+  async setCharacterOnline(
+    characterId: string,
+    isOnline: boolean
+  ): Promise<void> {
     try {
-      const updateData: any = {
+      const updateData: { isOnline: boolean; lastSeen?: Date } = {
         isOnline,
       };
 
@@ -278,7 +369,11 @@ export class PlayerService {
     }
   }
 
-  async banPlayer(userId: string, reason: string, adminId: string) {
+  async banPlayer(
+    userId: string,
+    reason: string,
+    adminId: string
+  ): Promise<void> {
     try {
       await this.prisma.user.update({
         where: { id: userId },
@@ -309,7 +404,7 @@ export class PlayerService {
     }
   }
 
-  async unbanPlayer(userId: string, adminId: string) {
+  async unbanPlayer(userId: string, adminId: string): Promise<void> {
     try {
       await this.prisma.user.update({
         where: { id: userId },
@@ -332,7 +427,7 @@ export class PlayerService {
     }
   }
 
-  async getPlayerStatistics(userId: string) {
+  async getPlayerStatistics(userId: string): Promise<PlayerStatistics> {
     try {
       const user = await this.prisma.user.findUnique({
         where: { id: userId },
@@ -357,15 +452,15 @@ export class PlayerService {
       }
 
       const totalMoney = user.characters.reduce(
-        (sum: number, char: any) => sum + char.money,
+        (sum: number, char: CharacterSummary) => sum + char.money,
         0
       );
       const highestLevel = Math.max(
-        ...user.characters.map((char: any) => char.level),
+        ...user.characters.map((char: CharacterSummary) => char.level),
         0
       );
       const totalExperience = user.characters.reduce(
-        (sum: number, char: any) => sum + char.experience,
+        (sum: number, char: CharacterSummary) => sum + char.experience,
         0
       );
 
@@ -414,7 +509,7 @@ export class PlayerService {
     }
   }
 
-  async deleteCharacter(characterId: string) {
+  async deleteCharacter(characterId: string): Promise<void> {
     try {
       await this.prisma.character.update({
         where: { id: characterId },
