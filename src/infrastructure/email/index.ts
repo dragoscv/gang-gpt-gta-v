@@ -26,7 +26,7 @@ class EmailService {
     await this.initializationPromise;
   }
 
-  private async initialize() {
+  private async initialize(): Promise<void> {
     try {
       // Check if email is configured
       const emailConfig = {

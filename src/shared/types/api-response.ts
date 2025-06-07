@@ -26,7 +26,7 @@ export interface ErrorResponse extends ApiResponse<never> {
   success: false;
   error: string;
   code?: string;
-  details?: Record<string, any>;
+  details?: Record<string, unknown>;
 }
 
 /**
@@ -55,7 +55,7 @@ export function createSuccessResponse<T>(
 export function createErrorResponse(
   error: string,
   code?: string,
-  details?: Record<string, any>
+  details?: Record<string, unknown>
 ): ErrorResponse {
   const response: ErrorResponse = {
     success: false,
@@ -117,13 +117,13 @@ export function isSuccessResponse<T>(
 }
 
 export function isErrorResponse(
-  response: ApiResponse<any>
+  response: ApiResponse<unknown>
 ): response is ErrorResponse {
   return response.success === false;
 }
 
 export function isPaginatedResponse<T>(
-  response: ApiResponse<T[] | any>
+  response: ApiResponse<T[] | unknown>
 ): response is PaginatedResponse<T> {
   return 'pagination' in response && Array.isArray(response.data);
 }

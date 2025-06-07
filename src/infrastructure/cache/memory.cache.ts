@@ -5,8 +5,8 @@
 
 import { logger } from '@/infrastructure/logging';
 
-interface CacheItem {
-  value: any;
+interface CacheItem<T = unknown> {
+  value: T;
   expiry?: number;
 }
 
@@ -38,7 +38,7 @@ export class MemoryCache {
   /**
    * Set a value in cache with optional expiry
    */
-  async set(key: string, value: any, ttlSeconds?: number): Promise<void> {
+  async set(key: string, value: unknown, ttlSeconds?: number): Promise<void> {
     // Clear existing timer if any
     const existingTimer = this.timers.get(key);
     if (existingTimer) {

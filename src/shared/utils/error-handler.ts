@@ -1,3 +1,5 @@
+import { Request, Response, NextFunction } from 'express';
+
 /**
  * Application Error Classes for GangGPT
  * Provides structured error handling with proper status codes and categorization
@@ -76,15 +78,22 @@ export function isOperationalError(error: Error): error is AppError {
  * Error handler middleware for Express
  */
 export function createErrorHandler() {
-  return (err: Error, req: any, res: any, _next: any): void => {
-    // Log error details
-    console.error({
-      error: err.message,
-      stack: err.stack,
-      url: req.url,
-      method: req.method,
-      timestamp: new Date().toISOString(),
-    });
+  return (
+    err: Error,
+    req: Request,
+    res: Response,
+    _next: NextFunction
+  ): void => {
+    // Log error details (using structured logging in production)
+    if (process.env.NODE_ENV !== 'production') {
+      console.error({
+        error: err.message,
+        stack: err.stack,
+        url: req.url,
+        method: req.method,
+        timestamp: new Date().toISOString(),
+      });
+    }
 
     // Handle operational errors
     if (isOperationalError(err)) {

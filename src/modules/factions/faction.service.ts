@@ -1,4 +1,4 @@
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, Faction } from '@prisma/client';
 import { logger } from '../../infrastructure/logging';
 import { aiService } from '../ai';
 
@@ -60,7 +60,7 @@ export class FactionService {
     this.prisma = prismaClient;
   }
 
-  async createFaction(data: CreateFactionData) {
+  async createFaction(data: CreateFactionData): Promise<Faction> {
     try {
       const faction = await this.prisma.faction.create({
         data: {
@@ -104,7 +104,7 @@ export class FactionService {
     characterId: string,
     factionId: string,
     rank: FactionRank = FactionRank.MEMBER
-  ) {
+  ): Promise<{ success: boolean; membership?: any; error?: string }> {
     try {
       // Check if character is already in a faction
       const existingMembership = await this.prisma.factionMembership.findFirst({
@@ -142,14 +142,17 @@ export class FactionService {
         rank,
       });
 
-      return member;
+      return { success: true, membership: member };
     } catch (error) {
       logger.error('Failed to add member to faction', {
         error: error instanceof Error ? error.message : 'Unknown error',
         characterId,
         factionId,
       });
-      throw error;
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error',
+      };
     }
   }
 

@@ -1,6 +1,8 @@
 // Email templates for GangGPT
 export const emailTemplates = {
-  welcome: (username: string) => ({
+  welcome: (
+    username: string
+  ): { subject: string; html: string; text: string } => ({
     subject: `Welcome to GangGPT, ${username}!`,
     html: `
       <!DOCTYPE html>
@@ -117,7 +119,9 @@ Terms of Service: https://ganggpt.com/terms
 Privacy Policy: https://ganggpt.com/privacy`,
   }),
 
-  passwordReset: (resetToken: string) => ({
+  passwordReset: (
+    resetToken: string
+  ): { subject: string; html: string; text: string } => ({
     subject: 'Reset Your GangGPT Password',
     html: `
       <!DOCTYPE html>

@@ -602,21 +602,19 @@ app.post('/api/factions/:factionId/join', async (req, res) => {
       return res.status(400).json({ error: 'Character ID is required' });
     }
 
-    const membership = await factionService.addMemberToFaction(
+    const result = await factionService.addMemberToFaction(
       factionId,
       characterId,
       rank
     );
 
+    if (!result.success) {
+      return res.status(400).json({ error: result.error });
+    }
+
     return res.status(201).json({
       message: 'Character joined faction successfully',
-      membership: {
-        id: membership.id,
-        characterId: membership.characterId,
-        factionId: membership.factionId,
-        rank: membership.rank,
-        joinedAt: membership.joinedAt,
-      },
+      membership: result.membership,
     });
   } catch (error) {
     logger.error('Failed to join faction', error);

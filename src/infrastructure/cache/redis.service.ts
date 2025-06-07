@@ -11,7 +11,13 @@ export class RedisService {
   private isConnected = false;
   constructor() {
     // Create Redis connection using URL and password
-    const redisOptions: any = {
+    const redisOptions: {
+      maxRetriesPerRequest?: number;
+      connectTimeout?: number;
+      lazyConnect?: boolean;
+      enableOfflineQueue?: boolean;
+      password?: string;
+    } = {
       maxRetriesPerRequest: 1, // Allow 1 retry
       connectTimeout: 2000, // 2 second timeout
       lazyConnect: true,
