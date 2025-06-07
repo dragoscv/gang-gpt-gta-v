@@ -10,6 +10,7 @@ yarn.lock
 dist/
 build/
 *.tsbuildinfo
+web/.next/
 
 # Environment files
 .env
