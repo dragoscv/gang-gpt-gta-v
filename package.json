@@ -120,13 +120,5 @@
       "prettier --write",
       "git add"
     ]
-  },
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/dragoscv/gang-gpt-gta-v.git"
-  },
-  "bugs": {
-    "url": "https://github.com/dragoscv/gang-gpt-gta-v/issues"
-  },
-  "homepage": "https://github.com/dragoscv/gang-gpt-gta-v#readme"
+  }
 }
