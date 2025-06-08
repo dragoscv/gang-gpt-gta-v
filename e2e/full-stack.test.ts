@@ -9,7 +9,9 @@ test.describe('GangGPT Full Stack E2E Tests', () => {
 
     // Check main sections - look for the actual GangGPT heading and subtitle
     await expect(page.locator('text=GangGPT').first()).toBeVisible();
-    await expect(page.locator('text=The Future of GTA V RP')).toBeVisible();    // Check for features section - use role selectors to avoid strict mode violations
+    await expect(page.locator('text=The Future of GTA V RP')).toBeVisible();
+
+    // Check for features section - use role selectors to avoid strict mode violations
     await expect(page.getByRole('heading', { name: 'AI-Powered NPCs' })).toBeVisible();
     await expect(page.getByRole('heading', { name: 'Dynamic Factions' })).toBeVisible();
     await expect(page.getByRole('heading', { name: 'Procedural Missions' })).toBeVisible();
@@ -17,7 +19,9 @@ test.describe('GangGPT Full Stack E2E Tests', () => {
     // Check if CTA buttons are present
     await expect(page.locator('text=Start Playing')).toBeVisible();
     await expect(page.locator('text=Meet Your AI Companion')).toBeVisible();
-  }); test('Statistics should display real backend data', async ({ page }) => {
+  });
+
+  test('Statistics should display real backend data', async ({ page }) => {
     await page.goto('http://localhost:4829');
 
     // Wait for page to load and scroll to statistics section
@@ -38,29 +42,32 @@ test.describe('GangGPT Full Stack E2E Tests', () => {
 
     // Verify we have multiple stat cards
     const cardCount = await statCards.count();
-    expect(cardCount).toBeGreaterThanOrEqual(4); test('tRPC integration test page should pass all tests', async ({ page }) => {
-      // Since there's no dedicated test page, let's test tRPC by checking if the dashboard loads
-      await page.goto('http://localhost:4829/dashboard');
-
-      // Wait for the page to load
-      await page.waitForLoadState('networkidle');
-
-      // Check if dashboard content loads (this would use tRPC)
-      // If page loads without major errors, tRPC is likely working
-      await expect(page).toHaveURL(/dashboard/);
-
-      // Check for basic page structure or navigation back to home if dashboard doesn't exist
-      const isNotFound = await page.locator('text=404').isVisible();
-      if (isNotFound) {
-        // Navigate back to home and check if it loads properly (basic tRPC functionality)
-        await page.goto('http://localhost:4829');
-        await expect(page.locator('text=GangGPT').first()).toBeVisible();
-      } else {
-        // Dashboard exists, check for basic content
-        await page.waitForTimeout(2000); // Give time for content to load
-      }
-    });
+    expect(cardCount).toBeGreaterThanOrEqual(4);
   });
+
+  test('tRPC integration test page should pass all tests', async ({ page }) => {
+    // Since there's no dedicated test page, let's test tRPC by checking if the dashboard loads
+    await page.goto('http://localhost:4829/dashboard');
+
+    // Wait for the page to load
+    await page.waitForLoadState('networkidle');
+
+    // Check if dashboard content loads (this would use tRPC)
+    // If page loads without major errors, tRPC is likely working
+    await expect(page).toHaveURL(/dashboard/);
+
+    // Check for basic page structure or navigation back to home if dashboard doesn't exist
+    const isNotFound = await page.locator('text=404').isVisible();
+    if (isNotFound) {
+      // Navigate back to home and check if it loads properly (basic tRPC functionality)
+      await page.goto('http://localhost:4829');
+      await expect(page.locator('text=GangGPT').first()).toBeVisible();
+    } else {
+      // Dashboard exists, check for basic content
+      await page.waitForTimeout(2000); // Give time for content to load
+    }
+  });
+
   test('Authentication pages should be accessible', async ({ page }) => {
     // Test login page
     await page.goto('http://localhost:4829/auth/login');
@@ -119,7 +126,9 @@ test.describe('GangGPT Full Stack E2E Tests', () => {
 
     expect(serverResponse.status).toBe(200);
     expect(serverResponse.data).toHaveProperty('maxPlayers');
-  }); test('Real-time statistics updates should work', async ({ page }) => {
+  });
+
+  test('Real-time statistics updates should work', async ({ page }) => {
     await page.goto('http://localhost:4829');
 
     // Wait for page to load and scroll to statistics section
