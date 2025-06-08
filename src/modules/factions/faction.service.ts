@@ -104,6 +104,7 @@ export class FactionService {
     characterId: string,
     factionId: string,
     rank: FactionRank = FactionRank.MEMBER
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
   ): Promise<{ success: boolean; membership?: any; error?: string }> {
     try {
       // Check if character is already in a faction
@@ -350,6 +351,7 @@ export class FactionService {
     }
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private buildFactionContext(faction: any, memberCount: number): string {
     return `
       Faction: ${faction.name}
@@ -428,6 +430,7 @@ export class FactionService {
           factionId,
           type: EventType.MEMBER_JOINED, // Using existing enum value, ideally we'd have AI_DECISION
           description: `AI Decision: ${decision.action} - ${decision.reasoning}`,
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           data: decision as any,
         },
       });
@@ -472,6 +475,7 @@ export class FactionService {
     }
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private formatRecentEvents(events: any[]): string {
     if (!events || events.length === 0) {
       return 'No recent events';

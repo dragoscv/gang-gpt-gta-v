@@ -248,6 +248,7 @@ export class EconomyService extends EventEmitter {
 
       if (cachedIndicators) {
         // Handle both JSON string and direct object cases
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         let parsedIndicators: any;
         if (typeof cachedIndicators === 'string') {
           try {

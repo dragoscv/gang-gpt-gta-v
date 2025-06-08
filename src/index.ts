@@ -435,6 +435,7 @@ app.get('/api/players/:userId/characters', async (req, res) => {
     const characters = await playerService.getPlayerCharacters(userId);
 
     return res.json({
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       characters: characters.map((char: any) => ({
         id: char.id,
         name: char.name,
@@ -540,6 +541,7 @@ app.get('/api/factions', async (_req, res) => {
     const factions = await factionService.getAllFactions();
 
     return res.json({
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       factions: factions.map((faction: any) => ({
         id: faction.id,
         name: faction.name,
@@ -578,6 +580,7 @@ app.get('/api/factions/:factionId', async (req, res) => {
         territory: faction.territory,
         aiPersonality: faction.aiPersonality,
         members:
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           faction.members?.map((member: any) => ({
             id: member.id,
             characterName: member.character.name,

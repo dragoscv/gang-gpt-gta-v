@@ -134,6 +134,7 @@ export const publicProcedure = t.procedure;
 /**
  * Private procedure - requires authentication
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const privateProcedure = t.procedure.use(({ ctx, next }): any => {
   if (!ctx.user) {
     throw new TRPCError({
@@ -153,6 +154,7 @@ export const privateProcedure = t.procedure.use(({ ctx, next }): any => {
 /**
  * Admin procedure - requires admin role
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const adminProcedure = privateProcedure.use(({ ctx, next }): any => {
   if (ctx.user!.role !== 'ADMIN') {
     throw new TRPCError({
@@ -169,6 +171,7 @@ export const adminProcedure = privateProcedure.use(({ ctx, next }): any => {
 /**
  * Faction procedure - requires faction membership
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const factionProcedure = privateProcedure.use(({ ctx, next }): any => {
   if (!ctx.user!.factionId) {
     throw new TRPCError({

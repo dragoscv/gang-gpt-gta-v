@@ -578,6 +578,7 @@ export class RageMPManager extends EventEmitter {
   /**
    * Call client-side function
    */
+  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
   callClient(player: any, eventName: string, ...args: any[]): void {
     if (player && player.call) {
       player.call(eventName, ...args);
@@ -587,6 +588,7 @@ export class RageMPManager extends EventEmitter {
   /**
    * Notify player with message
    */
+  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
   notifyPlayer(player: any, message: string, _type: string = 'info'): void {
     if (player && player.notify) {
       player.notify(message);
