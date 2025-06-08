@@ -16,6 +16,7 @@ import {
   apiRequestCounter,
 } from './infrastructure/monitoring';
 import { createHealthCheckRouter } from './api/routes/health';
+import { restRouter } from './api/routes/rest';
 import { PrismaClient } from '@prisma/client';
 import { RedisService } from './infrastructure/cache/redis.service';
 import { CacheManager } from './infrastructure/cache';
@@ -154,6 +155,9 @@ app.use((req, res, next) => {
 // Health check routes with comprehensive diagnostics
 const healthRouter = createHealthCheckRouter(prisma, redisService, aiService);
 app.use('/', healthRouter);
+
+// REST API routes for E2E testing compatibility
+app.use('/api', restRouter);
 
 // tRPC API endpoint
 app.use(

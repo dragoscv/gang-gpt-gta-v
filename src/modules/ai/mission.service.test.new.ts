@@ -6,8 +6,64 @@ import { AIService } from './ai.service';
 import { MemoryService } from './memory.service';
 import { WorldService } from '../world/world.service';
 
-// Create proper vi.fn() mocks for all Prisma methods
-const createMockPrismaClient = () => ({
+// Mock type interfaces
+interface MockPrismaClient {
+  mission: {
+    create: ReturnType<typeof vi.fn>;
+    findMany: ReturnType<typeof vi.fn>;
+    findUnique: ReturnType<typeof vi.fn>;
+    update: ReturnType<typeof vi.fn>;
+    delete: ReturnType<typeof vi.fn>;
+  };
+  user: {
+    findUnique: ReturnType<typeof vi.fn>;
+    update: ReturnType<typeof vi.fn>;
+  };
+  character: {
+    findUnique: ReturnType<typeof vi.fn>;
+    update: ReturnType<typeof vi.fn>;
+  };
+  faction: {
+    findUnique: ReturnType<typeof vi.fn>;
+    findMany: ReturnType<typeof vi.fn>;
+  };
+  missionObjective: {
+    createMany: ReturnType<typeof vi.fn>;
+    findMany: ReturnType<typeof vi.fn>;
+    update: ReturnType<typeof vi.fn>;
+  };
+  missionReward: {
+    create: ReturnType<typeof vi.fn>;
+  };
+}
+
+interface MockCache {
+  get: ReturnType<typeof vi.fn>;
+  set: ReturnType<typeof vi.fn>;
+  delete: ReturnType<typeof vi.fn>;
+  getTemporary: ReturnType<typeof vi.fn>;
+  setTemporary: ReturnType<typeof vi.fn>;
+}
+
+interface MockAIService {
+  generateNPCDialogue: ReturnType<typeof vi.fn>;
+  generateContent: ReturnType<typeof vi.fn>;
+}
+
+interface MockWorldService {
+  getCurrentWorldState: ReturnType<typeof vi.fn>;
+  getActiveWorldEvents: ReturnType<typeof vi.fn>;
+  getLocationNameFromCoordinates: ReturnType<typeof vi.fn>;
+}
+
+interface MockMemoryService {
+  getMemoryContext: ReturnType<typeof vi.fn>;
+  addMemory: ReturnType<typeof vi.fn>;
+  storeInteraction: ReturnType<typeof vi.fn>;
+}
+
+// Create properly typed vi.fn() mocks
+const createMockPrismaClient = (): MockPrismaClient => ({
   mission: {
     create: vi.fn(),
     findMany: vi.fn(),
@@ -37,7 +93,7 @@ const createMockPrismaClient = () => ({
   },
 });
 
-const createMockCache = () => ({
+const createMockCache = (): MockCache => ({
   get: vi.fn(),
   set: vi.fn(),
   delete: vi.fn(),
@@ -45,18 +101,18 @@ const createMockCache = () => ({
   setTemporary: vi.fn(),
 });
 
-const createMockAIService = () => ({
+const createMockAIService = (): MockAIService => ({
   generateNPCDialogue: vi.fn(),
   generateContent: vi.fn(),
 });
 
-const createMockWorldService = () => ({
+const createMockWorldService = (): MockWorldService => ({
   getCurrentWorldState: vi.fn(),
   getActiveWorldEvents: vi.fn(),
   getLocationNameFromCoordinates: vi.fn(),
 });
 
-const createMockMemoryService = () => ({
+const createMockMemoryService = (): MockMemoryService => ({
   getMemoryContext: vi.fn(),
   addMemory: vi.fn(),
   storeInteraction: vi.fn(),
@@ -74,11 +130,11 @@ vi.mock('../../infrastructure/logging', () => ({
 
 describe('MissionService', () => {
   let missionService: MissionService;
-  let mockPrisma: ReturnType<typeof createMockPrismaClient>;
-  let mockCache: ReturnType<typeof createMockCache>;
-  let mockAIService: ReturnType<typeof createMockAIService>;
-  let mockWorldService: ReturnType<typeof createMockWorldService>;
-  let mockMemoryService: ReturnType<typeof createMockMemoryService>;
+  let mockPrisma: MockPrismaClient;
+  let mockCache: MockCache;
+  let mockAIService: MockAIService;
+  let mockWorldService: MockWorldService;
+  let mockMemoryService: MockMemoryService;
 
   beforeEach(() => {
     vi.clearAllMocks();

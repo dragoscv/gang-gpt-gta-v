@@ -124,7 +124,7 @@ describe('Health Routes', () => {
         timestamp: expect.any(String),
         uptime: expect.any(Number),
         environment: 'test',
-        version: '0.1.0',
+        version: '1.0.0',
         services: expect.any(Object),
         system: expect.any(Object),
       });
@@ -146,7 +146,7 @@ describe('Health Routes', () => {
         timestamp: expect.any(String),
         uptime: expect.any(Number),
         environment: 'test',
-        version: '0.1.0',
+        version: '1.0.0',
         services: {
           database: {
             status: 'up',

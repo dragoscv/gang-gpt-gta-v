@@ -102,7 +102,9 @@ const mockApp = {
   set: vi.fn(),
 };
 
-vi.mock('express', () => {
+vi.mock('express', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('express')>();
+
   const mockExpress: any = vi.fn(() => mockApp);
   mockExpress.json = vi.fn(() => (req: any, res: any, next: any) => next());
   mockExpress.urlencoded = vi.fn(
@@ -110,8 +112,21 @@ vi.mock('express', () => {
   );
   mockExpress.static = vi.fn(() => (req: any, res: any, next: any) => next());
 
+  // Mock Router
+  const mockRouter = {
+    get: vi.fn(),
+    post: vi.fn(),
+    put: vi.fn(),
+    delete: vi.fn(),
+    use: vi.fn(),
+    route: vi.fn(),
+  };
+
+  mockExpress.Router = vi.fn(() => mockRouter);
+
   return {
     default: mockExpress,
+    Router: mockExpress.Router,
     __esModule: true,
   };
 });

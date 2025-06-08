@@ -1,6 +1,6 @@
 {
   "name": "@codai/gang-gpt-gta-v",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "AI-powered Grand Theft Auto V multiplayer server with intelligent NPCs, dynamic factions, and procedural missions",
   "main": "dist/server.js",
   "repository": {

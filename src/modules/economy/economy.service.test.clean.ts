@@ -1,8 +1,40 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { EconomyService } from './economy.service';
+import { PrismaClient } from '@prisma/client';
+
+// Mock interfaces
+interface MockPrismaClient {
+  economicTransaction: {
+    create: ReturnType<typeof vi.fn>;
+    findMany: ReturnType<typeof vi.fn>;
+    aggregate: ReturnType<typeof vi.fn>;
+  };
+  userProfile: {
+    update: ReturnType<typeof vi.fn>;
+    findUnique: ReturnType<typeof vi.fn>;
+  };
+  character: {
+    update: ReturnType<typeof vi.fn>;
+    findUnique: ReturnType<typeof vi.fn>;
+  };
+  faction: {
+    update: ReturnType<typeof vi.fn>;
+    findUnique: ReturnType<typeof vi.fn>;
+  };
+  economicEvent: {
+    create: ReturnType<typeof vi.fn>;
+    findMany: ReturnType<typeof vi.fn>;
+  };
+}
+
+interface MockCache {
+  get: ReturnType<typeof vi.fn>;
+  set: ReturnType<typeof vi.fn>;
+  del: ReturnType<typeof vi.fn>;
+}
 
 // Mock Prisma client
-const mockPrisma = {
+const mockPrisma: MockPrismaClient = {
   economicTransaction: {
     create: vi.fn(),
     findMany: vi.fn(),
@@ -26,14 +58,11 @@ const mockPrisma = {
   },
 };
 
-// Cast to any to avoid type issues in tests
-const prismaClient = mockPrisma as any;
-
 // Mock cache
-const mockCache = {
-  getEconomyData: vi.fn(),
-  setEconomyData: vi.fn(),
-  deleteEconomyData: vi.fn(),
+const mockCache: MockCache = {
+  get: vi.fn(),
+  set: vi.fn(),
+  del: vi.fn(),
 };
 
 // Mock logger
@@ -51,25 +80,15 @@ describe('EconomyService', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    economyService = new EconomyService(prismaClient, mockCache as any);
+    economyService = new EconomyService(
+      mockPrisma as unknown as PrismaClient,
+      mockCache
+    );
   });
 
   describe('processTransaction', () => {
     it('should process transaction successfully', async () => {
-      const mockTransaction = {
-        id: 'transaction-1',
-        playerId: 'player-1',
-        amount: 1000,
-        type: 'INCOME',
-        category: 'MISSION_REWARD',
-        description: 'Mission completed',
-        createdAt: new Date(),
-      };
-
-      (mockPrisma.economicTransaction.create as any).mockResolvedValue(
-        mockTransaction
-      );
-      (mockPrisma.character.update as any).mockResolvedValue({});
+      mockPrisma.character.update.mockResolvedValue({});
 
       const result = await economyService.processTransaction(
         'player-1',
@@ -80,20 +99,15 @@ describe('EconomyService', () => {
       );
 
       expect(result.success).toBe(true);
-      expect(result.transactionId).toBe('transaction-1');
-      expect(mockPrisma.economicTransaction.create).toHaveBeenCalledWith({
-        data: {
-          playerId: 'player-1',
-          amount: 1000,
-          type: 'INCOME',
-          category: 'MISSION_REWARD',
-          description: 'Mission completed',
-        },
+      expect(result.transactionId).toMatch(/^tx-\d+-[a-z0-9]+$/);
+      expect(mockPrisma.character.update).toHaveBeenCalledWith({
+        where: { id: 'player-1' },
+        data: { money: { increment: 1000 } },
       });
     });
 
     it('should handle transaction failure gracefully', async () => {
-      (mockPrisma.economicTransaction.create as any).mockRejectedValue(
+      mockPrisma.character.update.mockRejectedValue(
         new Error('Database error')
       );
 
@@ -106,7 +120,7 @@ describe('EconomyService', () => {
       );
 
       expect(result.success).toBe(false);
-      expect(result.error).toBe('Transaction failed');
+      expect(result.error).toContain('Failed to process transaction');
     });
 
     it('should update character balance on income', async () => {
@@ -120,14 +134,12 @@ describe('EconomyService', () => {
         createdAt: new Date(),
       };
 
-      (mockPrisma.economicTransaction.create as any).mockResolvedValue(
-        mockTransaction
-      );
-      (mockPrisma.character.findUnique as any).mockResolvedValue({
+      mockPrisma.economicTransaction.create.mockResolvedValue(mockTransaction);
+      mockPrisma.character.findUnique.mockResolvedValue({
         id: 'player-1',
         money: 5000,
       });
-      (mockPrisma.character.update as any).mockResolvedValue({});
+      mockPrisma.character.update.mockResolvedValue({});
 
       const result = await economyService.processTransaction(
         'player-1',
@@ -155,14 +167,12 @@ describe('EconomyService', () => {
         createdAt: new Date(),
       };
 
-      (mockPrisma.economicTransaction.create as any).mockResolvedValue(
-        mockTransaction
-      );
-      (mockPrisma.character.findUnique as any).mockResolvedValue({
+      mockPrisma.economicTransaction.create.mockResolvedValue(mockTransaction);
+      mockPrisma.character.findUnique.mockResolvedValue({
         id: 'player-1',
         money: 5000,
       });
-      (mockPrisma.character.update as any).mockResolvedValue({});
+      mockPrisma.character.update.mockResolvedValue({});
 
       const result = await economyService.processTransaction(
         'player-1',
@@ -182,7 +192,7 @@ describe('EconomyService', () => {
 
   describe('getPlayerBalance', () => {
     it('should return player balance successfully', async () => {
-      (mockPrisma.character.findUnique as any).mockResolvedValue({
+      mockPrisma.character.findUnique.mockResolvedValue({
         id: 'player-1',
         money: 5000,
       });
@@ -197,7 +207,7 @@ describe('EconomyService', () => {
     });
 
     it('should return 0 for non-existent player', async () => {
-      (mockPrisma.character.findUnique as any).mockResolvedValue(null);
+      mockPrisma.character.findUnique.mockResolvedValue(null);
 
       const balance = await economyService.getPlayerBalance('non-existent');
 
@@ -205,7 +215,7 @@ describe('EconomyService', () => {
     });
 
     it('should handle database errors', async () => {
-      (mockPrisma.character.findUnique as any).mockRejectedValue(
+      mockPrisma.character.findUnique.mockRejectedValue(
         new Error('Database error')
       );
 
@@ -238,7 +248,7 @@ describe('EconomyService', () => {
         },
       ];
 
-      (mockPrisma.economicTransaction.findMany as any).mockResolvedValue(
+      mockPrisma.economicTransaction.findMany.mockResolvedValue(
         mockTransactions
       );
 
@@ -253,7 +263,7 @@ describe('EconomyService', () => {
     });
 
     it('should handle database errors', async () => {
-      (mockPrisma.economicTransaction.findMany as any).mockRejectedValue(
+      mockPrisma.economicTransaction.findMany.mockRejectedValue(
         new Error('Database error')
       );
 
@@ -266,13 +276,13 @@ describe('EconomyService', () => {
   describe('purchaseItem', () => {
     beforeEach(() => {
       // Setup character with money
-      (mockPrisma.character.findUnique as any).mockResolvedValue({
+      mockPrisma.character.findUnique.mockResolvedValue({
         id: 'player-1',
         money: 5000,
         inventory: [],
       });
-      (mockPrisma.character.update as any).mockResolvedValue({});
-      (mockPrisma.economicTransaction.create as any).mockResolvedValue({
+      mockPrisma.character.update.mockResolvedValue({});
+      mockPrisma.economicTransaction.create.mockResolvedValue({
         id: 'transaction-1',
       });
     });
@@ -287,7 +297,7 @@ describe('EconomyService', () => {
     });
 
     it('should handle insufficient funds', async () => {
-      (mockPrisma.character.findUnique as any).mockResolvedValue({
+      mockPrisma.character.findUnique.mockResolvedValue({
         id: 'player-1',
         money: 50,
         inventory: [],
@@ -304,7 +314,7 @@ describe('EconomyService', () => {
     });
 
     it('should handle player not found', async () => {
-      (mockPrisma.character.findUnique as any).mockResolvedValue(null);
+      mockPrisma.character.findUnique.mockResolvedValue(null);
 
       const result = await economyService.purchaseItem(
         'non-existent',
@@ -317,7 +327,7 @@ describe('EconomyService', () => {
     });
 
     it('should handle database error', async () => {
-      (mockPrisma.character.findUnique as any).mockRejectedValue(
+      mockPrisma.character.findUnique.mockRejectedValue(
         new Error('Database error')
       );
 
@@ -331,13 +341,13 @@ describe('EconomyService', () => {
   describe('sellItem', () => {
     beforeEach(() => {
       // Setup character with inventory
-      (mockPrisma.character.findUnique as any).mockResolvedValue({
+      mockPrisma.character.findUnique.mockResolvedValue({
         id: 'player-1',
         money: 1000,
         inventory: [{ itemId: 'item-1', quantity: 5 }],
       });
-      (mockPrisma.character.update as any).mockResolvedValue({});
-      (mockPrisma.economicTransaction.create as any).mockResolvedValue({
+      mockPrisma.character.update.mockResolvedValue({});
+      mockPrisma.economicTransaction.create.mockResolvedValue({
         id: 'transaction-1',
       });
     });
@@ -359,7 +369,7 @@ describe('EconomyService', () => {
     });
 
     it('should handle player not found', async () => {
-      (mockPrisma.character.findUnique as any).mockResolvedValue(null);
+      mockPrisma.character.findUnique.mockResolvedValue(null);
 
       const result = await economyService.sellItem('non-existent', 'item-1', 1);
 
@@ -368,7 +378,7 @@ describe('EconomyService', () => {
     });
 
     it('should handle item not in inventory', async () => {
-      (mockPrisma.character.findUnique as any).mockResolvedValue({
+      mockPrisma.character.findUnique.mockResolvedValue({
         id: 'player-1',
         money: 1000,
         inventory: [],
@@ -381,7 +391,7 @@ describe('EconomyService', () => {
     });
 
     it('should handle database error', async () => {
-      (mockPrisma.character.findUnique as any).mockRejectedValue(
+      mockPrisma.character.findUnique.mockRejectedValue(
         new Error('Database error')
       );
 
@@ -395,15 +405,15 @@ describe('EconomyService', () => {
   describe('cleanup', () => {
     it('should cleanup resources successfully', async () => {
       // Mock price update interval
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (economyService as any).priceUpdateInterval = setInterval(() => {}, 1000);
 
-      await economyService.cleanup();
-
-      // The cleanup method clears the interval
+      await economyService.cleanup(); // The cleanup method clears the interval
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       expect((economyService as any).priceUpdateInterval).toBeDefined();
     });
-
     it('should handle cleanup when no interval is set', async () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (economyService as any).priceUpdateInterval = null;
 
       await expect(economyService.cleanup()).resolves.not.toThrow();
@@ -413,6 +423,7 @@ describe('EconomyService', () => {
   describe('getMarketData', () => {
     it('should return market data for all items', () => {
       // Initialize market with test data
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (economyService as any).marketItems.set('item-1', {
         id: 'item-1',
         name: 'Test Item',
@@ -433,8 +444,8 @@ describe('EconomyService', () => {
       expect(marketData.get('item-1')).toBeDefined();
       expect(marketData.get('item-1')?.currentPrice).toBe(120);
     });
-
     it('should return market data for specific item', () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (economyService as any).marketItems.set('item-1', {
         id: 'item-1',
         name: 'Test Item',

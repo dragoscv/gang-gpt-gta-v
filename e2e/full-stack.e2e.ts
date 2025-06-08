@@ -1,9 +1,8 @@
 import { test, expect } from '@playwright/test';
 
 test.describe('GangGPT Full Stack E2E Tests', () => {
-
   test('Homepage should load and display main sections', async ({ page }) => {
-    await page.goto('http://localhost:3000');
+    await page.goto('http://localhost:4829');
 
     // Check if page loads
     await expect(page).toHaveTitle(/GangGPT/);
@@ -25,7 +24,7 @@ test.describe('GangGPT Full Stack E2E Tests', () => {
   });
 
   test('Statistics should display real backend data', async ({ page }) => {
-    await page.goto('http://localhost:3000/test-stats');
+    await page.goto('http://localhost:4829/test-stats');
 
     // Wait for stats to load
     await page.waitForSelector('.text-2xl.font-bold', { timeout: 10000 });
@@ -41,7 +40,7 @@ test.describe('GangGPT Full Stack E2E Tests', () => {
   });
 
   test('tRPC integration test page should pass all tests', async ({ page }) => {
-    await page.goto('http://localhost:3000/test-trpc');
+    await page.goto('http://localhost:4829/test-trpc');
 
     // Wait for tests to complete
     await page.waitForSelector('.bg-green-100', { timeout: 15000 });
@@ -60,18 +59,18 @@ test.describe('GangGPT Full Stack E2E Tests', () => {
 
   test('Authentication pages should be accessible', async ({ page }) => {
     // Test login page
-    await page.goto('http://localhost:3000/auth/login');
+    await page.goto('http://localhost:4829/auth/login');
     await expect(page.locator('input[type="email"]')).toBeVisible();
     await expect(page.locator('input[type="password"]')).toBeVisible();
 
     // Test register page
-    await page.goto('http://localhost:3000/auth/register');
+    await page.goto('http://localhost:4829/auth/register');
     await expect(page.locator('input[type="email"]')).toBeVisible();
     await expect(page.locator('input[type="password"]')).toBeVisible();
   });
 
   test('Navigation should work properly', async ({ page }) => {
-    await page.goto('http://localhost:3000');
+    await page.goto('http://localhost:4829');
 
     // Test navigation to different sections
     await page.click('text=Dashboard');
@@ -85,11 +84,11 @@ test.describe('GangGPT Full Stack E2E Tests', () => {
   });
 
   test('Backend API endpoints should be accessible from frontend', async ({ page }) => {
-    await page.goto('http://localhost:3000');
+    await page.goto('http://localhost:4829');
 
     // Test if backend endpoints return proper responses
     const statsResponse = await page.evaluate(async () => {
-      const response = await fetch('http://localhost:3001/api/stats');
+      const response = await fetch('http://localhost:4828/api/stats');
       return {
         status: response.status,
         ok: response.ok,
@@ -105,7 +104,7 @@ test.describe('GangGPT Full Stack E2E Tests', () => {
 
     // Test server info endpoint
     const serverResponse = await page.evaluate(async () => {
-      const response = await fetch('http://localhost:3001/api/server/info');
+      const response = await fetch('http://localhost:4828/api/server/info');
       return {
         status: response.status,
         data: await response.json()
@@ -117,7 +116,7 @@ test.describe('GangGPT Full Stack E2E Tests', () => {
   });
 
   test('Real-time statistics updates should work', async ({ page }) => {
-    await page.goto('http://localhost:3000/test-stats');
+    await page.goto('http://localhost:4829/test-stats');
 
     // Get initial stats
     await page.waitForSelector('.text-2xl.font-bold');

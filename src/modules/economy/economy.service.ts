@@ -8,6 +8,12 @@ import { logger } from '@/infrastructure/logging';
 import { cache } from '@/infrastructure/cache';
 import { EventEmitter } from 'events';
 
+interface CacheInterface {
+  get(key: string): Promise<string | null>;
+  set(key: string, value: string, ttlSeconds?: number): Promise<void>;
+  del(key: string): Promise<void>;
+}
+
 export interface MarketItem {
   id: string;
   name: string;
@@ -61,6 +67,17 @@ export interface BusinessVenture {
   lastUpdate: Date;
 }
 
+// Type definitions for temporary data structures (these should be replaced with Prisma types)
+interface EconomicEventData {
+  id: string;
+  eventType: string;
+  impactType: string;
+  severity: number;
+  description: string;
+  duration: number;
+  isActive: boolean;
+}
+
 export class EconomyService extends EventEmitter {
   private marketItems: Map<string, MarketItem> = new Map();
   private recentTransactions: Transaction[] = [];
@@ -71,7 +88,7 @@ export class EconomyService extends EventEmitter {
 
   constructor(
     private prisma: PrismaClient,
-    private cache?: any
+    private cache?: CacheInterface
   ) {
     super();
     this.initializeEconomy();
@@ -596,30 +613,30 @@ export class EconomyService extends EventEmitter {
         amount = 0;
       }
 
-      // Use mock economicTransaction.create as expected by tests
-      const transactionData = {
-        playerId,
-        amount,
-        type,
-        category,
-        description,
-      };
-
-      const mockTransaction = await (
-        this.prisma as any
-      ).economicTransaction.create({
-        data: transactionData,
+      // Create transaction record in database
+      const transaction = await this.prisma.economicTransaction.create({
+        data: {
+          playerId,
+          amount,
+          type,
+          category,
+          description: description || `${type} transaction`,
+        },
       });
 
-      // Use mock userProfile.update
-      await (this.prisma as any).userProfile.update({
+      // Update character's money using proper Prisma model
+      await this.prisma.userProfile.update({
         where: { id: playerId },
-        data: { balance: { increment: type === 'INCOME' ? amount : -amount } },
+        data: {
+          money: {
+            increment: type === 'INCOME' ? amount : -amount,
+          },
+        },
       });
 
-      // Create internal transaction record
-      const transaction: Transaction = {
-        id: mockTransaction.id,
+      // Store in memory for quick access
+      const inMemoryTransaction: Transaction = {
+        id: transaction.id,
         type: type.toLowerCase() as 'income' | 'expense',
         characterId: playerId,
         amount: type === 'INCOME' ? amount : -amount,
@@ -628,14 +645,14 @@ export class EconomyService extends EventEmitter {
         metadata: {},
       };
 
-      this.recentTransactions.push(transaction);
-      this.emit('transactionCompleted', transaction);
+      this.recentTransactions.push(inMemoryTransaction);
+      this.emit('transactionCompleted', inMemoryTransaction);
 
       logger.info(
         `Transaction processed: ${type} of $${amount} for player ${playerId}`
       );
 
-      return { success: true, transactionId: mockTransaction.id };
+      return { success: true, transactionId: transaction.id };
     } catch (error) {
       logger.error('Transaction processing failed:', error);
       return { success: false, error: 'Failed to process transaction' };
@@ -658,11 +675,15 @@ export class EconomyService extends EventEmitter {
     }>;
   }> {
     try {
-      // Check cache first using mock cache methods
+      // Check cache first
       let cachedData = null;
-      if (this.cache && this.cache.getEconomyData) {
+      if (this.cache) {
         try {
-          cachedData = await this.cache.getEconomyData(playerId);
+          const cacheKey = `economy:player:${playerId}`;
+          const cached = await this.cache.get(cacheKey);
+          if (cached) {
+            cachedData = JSON.parse(cached);
+          }
         } catch (cacheError) {
           logger.warn('Failed to get cached player economic data:', cacheError);
         }
@@ -672,43 +693,40 @@ export class EconomyService extends EventEmitter {
         return cachedData;
       }
 
-      // Use mock economicTransaction.findMany
-      const mockTransactions = await (
-        this.prisma as any
-      ).economicTransaction.findMany({
-        where: { playerId },
-        orderBy: { createdAt: 'desc' },
-        take: 10,
-      });
+      // Use in-memory transactions for now
+      const playerTransactions = this.recentTransactions
+        .filter(t => t.characterId === playerId)
+        .slice(0, 10);
 
-      // Calculate totals from mock transactions
-      const totalIncome = mockTransactions
-        .filter((tx: any) => tx.amount > 0)
-        .reduce((sum: number, tx: any) => sum + tx.amount, 0);
+      // Calculate totals from transactions
+      const totalIncome = playerTransactions
+        .filter(tx => tx.amount > 0)
+        .reduce((sum: number, tx) => sum + tx.amount, 0);
 
       const totalExpenses = Math.abs(
-        mockTransactions
-          .filter((tx: any) => tx.amount < 0)
-          .reduce((sum: number, tx: any) => sum + tx.amount, 0)
+        playerTransactions
+          .filter(tx => tx.amount < 0)
+          .reduce((sum: number, tx) => sum + tx.amount, 0)
       );
 
       const result = {
         totalIncome,
         totalExpenses,
         netWorth: totalIncome - totalExpenses,
-        recentTransactions: mockTransactions.map((tx: any) => ({
+        recentTransactions: playerTransactions.map(tx => ({
           id: tx.id,
           type: tx.type,
           amount: tx.amount,
           description: tx.description,
-          createdAt: tx.createdAt,
+          createdAt: tx.timestamp,
         })),
       };
 
-      // Cache the result using mock cache
-      if (this.cache && this.cache.setEconomyData) {
+      // Cache the result
+      if (this.cache) {
         try {
-          await this.cache.setEconomyData(playerId, result);
+          const cacheKey = `economy:player:${playerId}`;
+          await this.cache.set(cacheKey, JSON.stringify(result), 300); // 5 minutes TTL
         } catch (cacheError) {
           logger.warn('Failed to cache player economic data:', cacheError);
         }
@@ -734,18 +752,16 @@ export class EconomyService extends EventEmitter {
     amount: number
   ): Promise<{ success: boolean; newBalance?: number; error?: string }> {
     try {
-      // Use mock userProfile.findUnique
-      const mockUserProfile = await (this.prisma as any).userProfile.findUnique(
-        {
-          where: { playerId },
-        }
-      );
+      // Find character by playerId
+      const character = await this.prisma.character.findUnique({
+        where: { id: playerId },
+      });
 
-      if (!mockUserProfile) {
+      if (!character) {
         return { success: false, error: 'Player not found' };
       }
 
-      const currentBalance = mockUserProfile.money || 0;
+      const currentBalance = character.money || 0;
       const newBalance = currentBalance + amount;
 
       // Prevent negative balance
@@ -753,16 +769,17 @@ export class EconomyService extends EventEmitter {
         return { success: false, error: 'Insufficient funds' };
       }
 
-      // Use mock userProfile.update
-      await (this.prisma as any).userProfile.update({
-        where: { playerId },
+      // Update character balance
+      await this.prisma.character.update({
+        where: { id: playerId },
         data: { money: newBalance },
       });
 
       // Clear cached economic data
-      if (this.cache && this.cache.deleteEconomyData) {
+      if (this.cache) {
         try {
-          await this.cache.deleteEconomyData(playerId);
+          const cacheKey = `economy:player:${playerId}`;
+          await this.cache.del(cacheKey);
         } catch (cacheError) {
           logger.warn('Failed to clear cache:', cacheError);
         }
@@ -784,17 +801,18 @@ export class EconomyService extends EventEmitter {
    */
   public async calculateInflation(): Promise<number> {
     try {
-      // Use mock economicEvent.findMany
-      const mockEvents = await (this.prisma as any).economicEvent.findMany({
+      // Get active economic events affecting inflation
+      const events = await this.prisma.economicEvent.findMany({
         where: {
           impactType: { in: ['INFLATION', 'DEFLATION'] },
+          isActive: true,
         },
       });
 
       let inflationRate = 0; // Start from 0 base rate
 
       // Calculate inflation based on events
-      for (const event of mockEvents) {
+      for (const event of events) {
         if (event.impactType === 'INFLATION') {
           inflationRate += event.severity;
         } else if (event.impactType === 'DEFLATION') {
@@ -803,7 +821,7 @@ export class EconomyService extends EventEmitter {
       }
 
       // If no events, use default inflation
-      if (mockEvents.length === 0) {
+      if (events.length === 0) {
         inflationRate = 0.02; // Default 2% inflation
       }
 
@@ -828,8 +846,11 @@ export class EconomyService extends EventEmitter {
     duration: number
   ): Promise<{ success: boolean; eventId?: string; error?: string }> {
     try {
-      // Use mock economicEvent.create
-      const mockEvent = await (this.prisma as any).economicEvent.create({
+      // Calculate expiration time based on duration
+      const expiresAt = new Date(Date.now() + duration * 1000);
+
+      // Create new economic event in database
+      const event = await this.prisma.economicEvent.create({
         data: {
           eventType,
           impactType,
@@ -837,16 +858,24 @@ export class EconomyService extends EventEmitter {
           description,
           duration,
           isActive: true,
+          expiresAt,
         },
       });
 
       // Apply immediate market effects
-      this.applyEconomicEventEffects(mockEvent);
+      this.applyEconomicEventEffects({
+        id: event.id,
+        eventType,
+        impactType,
+        severity,
+        description,
+        duration,
+        isActive: true,
+      });
 
-      // Store event in memory (could be cached or stored in session)
       logger.info(`Economic event generated: ${eventType} - ${description}`);
 
-      return { success: true, eventId: mockEvent.id };
+      return { success: true, eventId: event.id };
     } catch (error) {
       logger.error('Failed to generate economic event:', error);
       return { success: false, error: 'Failed to generate economic event' };
@@ -856,7 +885,7 @@ export class EconomyService extends EventEmitter {
   /**
    * Apply effects of economic events to the market
    */
-  private applyEconomicEventEffects(event: any): void {
+  private applyEconomicEventEffects(event: EconomicEventData): void {
     try {
       const magnitude = Math.abs(event.severity || 0.1);
 
@@ -1017,7 +1046,7 @@ export class EconomyService extends EventEmitter {
   public async getTransactionHistory(
     playerId: string,
     limit: number = 10
-  ): Promise<any[]> {
+  ): Promise<Transaction[]> {
     try {
       // TODO: Implement when economicTransaction table is added to schema
       // For now, return recent transactions from memory

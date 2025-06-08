@@ -24,6 +24,7 @@ model User {
   analytics    PlayerAnalytics[]
   sessions     UserSession[]
   passwordResetTokens PasswordResetToken[]
+  profile      UserProfile?
 
   @@map("users")
 }
@@ -457,4 +458,44 @@ model PasswordResetToken {
   user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("password_reset_tokens")
+}
+
+model EconomicTransaction {
+  id          String   @id @default(cuid())
+  playerId    String   @map("player_id")
+  amount      Float
+  type        String   // INCOME, EXPENSE
+  category    String
+  description String
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@map("economic_transactions")
+}
+
+model UserProfile {
+  id          String   @id @default(cuid())
+  userId      String   @unique @map("user_id")
+  money       Int      @default(5000)
+  bank        Int      @default(0)
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_profiles")
+}
+
+model EconomicEvent {
+  id          String   @id @default(cuid())
+  eventType   String   @map("event_type")
+  impactType  String   @map("impact_type")
+  severity    Float
+  description String
+  duration    Int      @default(3600) // Duration in seconds, default 1 hour
+  isActive    Boolean  @default(true) @map("is_active")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  expiresAt   DateTime @map("expires_at")
+
+  @@map("economic_events")
 }

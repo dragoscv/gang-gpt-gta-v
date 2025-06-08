@@ -1,4 +1,4 @@
-import { defineConfig } from '@playwright/test';
+import { defineConfig, devices } from '@playwright/test';
 
 export default defineConfig({
   // Test directory
@@ -27,11 +27,10 @@ export default defineConfig({
     ['json', { outputFile: 'test-results.json' }],
     ['list'],
   ],
-
   // Global test configuration
   use: {
     // Base URL for tests
-    baseURL: 'http://localhost:3002',
+    baseURL: 'http://localhost:4829',
 
     // Collect trace when retrying the failed test
     trace: 'on-first-retry',
@@ -78,24 +77,19 @@ export default defineConfig({
       name: 'Mobile Safari',
       use: { ...devices['iPhone 12'] },
     },
-  ],
-
-  // Web server configuration
-  webServer: [
-    {
-      command: 'npm run dev',
-      port: 3001,
-      reuseExistingServer: !process.env.CI,
-      cwd: '.',
-    },
-    {
-      command: 'npm run dev',
-      port: 3002,
-      reuseExistingServer: !process.env.CI,
-      cwd: './web',
-    },
-  ],
+  ],  // Web server configuration (commented out for standalone testing)
+  // webServer: [
+  //   {
+  //     command: 'pnpm run dev',
+  //     port: 4828,
+  //     reuseExistingServer: !process.env.CI,
+  //     cwd: '.',
+  //   },
+  //   {
+  //     command: 'pnpm run dev',
+  //     port: 4829,
+  //     reuseExistingServer: !process.env.CI,
+  //     cwd: './web',
+  //   },
+  // ],
 });
-
-// Import devices for mobile testing
-import { devices } from '@playwright/test';

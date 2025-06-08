@@ -28,8 +28,21 @@ vi.mock('../../infrastructure/cache', () => ({
   },
 }));
 
+// Mock interfaces
+interface MockPrismaMethod {
+  findMany: ReturnType<typeof vi.fn>;
+  findFirst: ReturnType<typeof vi.fn>;
+  findUnique: ReturnType<typeof vi.fn>;
+  create: ReturnType<typeof vi.fn>;
+  update: ReturnType<typeof vi.fn>;
+  upsert: ReturnType<typeof vi.fn>;
+  delete: ReturnType<typeof vi.fn>;
+  deleteMany: ReturnType<typeof vi.fn>;
+  count: ReturnType<typeof vi.fn>;
+}
+
 // Create comprehensive Prisma mock
-const createMockPrismaMethod = () => ({
+const createMockPrismaMethod = (): MockPrismaMethod => ({
   findMany: vi.fn(),
   findFirst: vi.fn(),
   findUnique: vi.fn(),
@@ -64,10 +77,12 @@ describe('WorldService', () => {
     worldService = Object.create(WorldService.prototype);
 
     // Manually set the prisma property
-    (worldService as any).prisma = mockPrisma;
-    (worldService as any).territories = new Map();
-    (worldService as any).activeEvents = new Map();
-    (worldService as any).economicState = null;
+    (worldService as unknown as Record<string, unknown>).prisma = mockPrisma;
+    (worldService as unknown as Record<string, unknown>).territories =
+      new Map();
+    (worldService as unknown as Record<string, unknown>).activeEvents =
+      new Map();
+    (worldService as unknown as Record<string, unknown>).economicState = null;
   });
 
   describe('getTerritory', () => {
@@ -81,7 +96,12 @@ describe('WorldService', () => {
         lastUpdate: new Date(),
       };
 
-      (worldService as any).territories.set('test-territory', mockTerritory);
+      (
+        (worldService as unknown as Record<string, unknown>).territories as Map<
+          string,
+          unknown
+        >
+      ).set('test-territory', mockTerritory);
 
       const result = worldService.getTerritory('test-territory');
       expect(result).toEqual(mockTerritory);
@@ -115,7 +135,10 @@ describe('WorldService', () => {
       ];
 
       mockTerritories.forEach(territory => {
-        (worldService as any).territories.set(territory.id, territory);
+        (
+          (worldService as unknown as Record<string, unknown>)
+            .territories as Map<string, unknown>
+        ).set(territory.id, territory);
       });
 
       const result = worldService.getAllTerritories();
@@ -157,7 +180,10 @@ describe('WorldService', () => {
       ];
 
       mockEvents.forEach(event => {
-        (worldService as any).activeEvents.set(event.id, event);
+        (
+          (worldService as unknown as Record<string, unknown>)
+            .activeEvents as Map<string, unknown>
+        ).set(event.id, event);
       });
 
       const result = worldService.getActiveEvents();
@@ -180,7 +206,8 @@ describe('WorldService', () => {
         lastUpdate: new Date(),
       };
 
-      (worldService as any).economicState = mockEconomicState;
+      (worldService as unknown as Record<string, unknown>).economicState =
+        mockEconomicState;
 
       const result = worldService.getEconomicState();
       expect(result).toEqual(mockEconomicState);
@@ -216,8 +243,16 @@ describe('WorldService', () => {
         expiresAt: new Date(Date.now() + 60000),
       };
 
-      (worldService as any).territories.set('test-territory', mockTerritory);
-      (worldService as any).activeEvents.set('test-event', mockEvent);
+      (
+        (worldService as unknown as Record<string, unknown>).territories as Map<
+          string,
+          unknown
+        >
+      ).set('test-territory', mockTerritory);
+      (
+        (worldService as unknown as Record<string, unknown>)
+          .activeEvents as Map<string, unknown>
+      ).set('test-event', mockEvent);
 
       const result = worldService.getWorldStats();
       expect(result).toHaveProperty('totalTerritories', 1);
@@ -255,8 +290,14 @@ describe('WorldService', () => {
         expiresAt: new Date(Date.now() + 30000),
       };
 
-      (worldService as any).activeEvents.set('nearby-event', mockEvent);
-      (worldService as any).activeEvents.set('far-event', farEvent); // Query for events near the first event's location
+      (
+        (worldService as unknown as Record<string, unknown>)
+          .activeEvents as Map<string, unknown>
+      ).set('nearby-event', mockEvent);
+      (
+        (worldService as unknown as Record<string, unknown>)
+          .activeEvents as Map<string, unknown>
+      ).set('far-event', farEvent); // Query for events near the first event's location
       const result = worldService.getEventsAtLocation(120, 120, 10);
 
       expect(result).toHaveLength(1);

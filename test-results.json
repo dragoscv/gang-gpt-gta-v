@@ -10,7 +10,9 @@
     "grep": {},
     "grepInvert": null,
     "maxFailures": 0,
-    "metadata": {},
+    "metadata": {
+      "actualWorkers": 1
+    },
     "preserveOutput": "always",
     "reporter": [
       [
@@ -40,7 +42,9 @@
         "outputDir": "E:/GitHub/gang-gpt-gta-v/test-results",
         "repeatEach": 1,
         "retries": 0,
-        "metadata": {},
+        "metadata": {
+          "actualWorkers": 1
+        },
         "id": "chromium",
         "name": "chromium",
         "testDir": "E:/GitHub/gang-gpt-gta-v/e2e",
@@ -54,7 +58,9 @@
         "outputDir": "E:/GitHub/gang-gpt-gta-v/test-results",
         "repeatEach": 1,
         "retries": 0,
-        "metadata": {},
+        "metadata": {
+          "actualWorkers": 1
+        },
         "id": "firefox",
         "name": "firefox",
         "testDir": "E:/GitHub/gang-gpt-gta-v/e2e",
@@ -68,7 +74,9 @@
         "outputDir": "E:/GitHub/gang-gpt-gta-v/test-results",
         "repeatEach": 1,
         "retries": 0,
-        "metadata": {},
+        "metadata": {
+          "actualWorkers": 1
+        },
         "id": "webkit",
         "name": "webkit",
         "testDir": "E:/GitHub/gang-gpt-gta-v/e2e",
@@ -82,7 +90,9 @@
         "outputDir": "E:/GitHub/gang-gpt-gta-v/test-results",
         "repeatEach": 1,
         "retries": 0,
-        "metadata": {},
+        "metadata": {
+          "actualWorkers": 1
+        },
         "id": "Mobile Chrome",
         "name": "Mobile Chrome",
         "testDir": "E:/GitHub/gang-gpt-gta-v/e2e",
@@ -96,7 +106,9 @@
         "outputDir": "E:/GitHub/gang-gpt-gta-v/test-results",
         "repeatEach": 1,
         "retries": 0,
-        "metadata": {},
+        "metadata": {
+          "actualWorkers": 1
+        },
         "id": "Mobile Safari",
         "name": "Mobile Safari",
         "testDir": "E:/GitHub/gang-gpt-gta-v/e2e",
@@ -114,17 +126,55 @@
     "workers": 16,
     "webServer": null
   },
-  "suites": [],
-  "errors": [
+  "suites": [
     {
-      "message": "Error: Process from config.webServer was not able to start. Exit code: 1",
-      "stack": "Error: Process from config.webServer was not able to start. Exit code: 1"
+      "title": "simple.test.ts",
+      "file": "simple.test.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "simple test",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 5,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2025-06-08T12:21:39.363Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "f0ed5b996187e85f8787-ec49eddb6c4ddf4438c8",
+          "file": "simple.test.ts",
+          "line": 3,
+          "column": 5
+        }
+      ]
     }
   ],
+  "errors": [],
   "stats": {
-    "startTime": "2025-06-08T08:05:20.225Z",
-    "duration": 1310.3629999999998,
-    "expected": 0,
+    "startTime": "2025-06-08T12:21:38.512Z",
+    "duration": 894.166,
+    "expected": 1,
     "skipped": 0,
     "unexpected": 0,
     "flaky": 0

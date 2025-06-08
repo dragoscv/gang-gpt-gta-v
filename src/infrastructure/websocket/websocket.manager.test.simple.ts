@@ -142,7 +142,7 @@ describe('WebSocket Manager', () => {
             characterId: 'char-123',
             playerId: 'player-123',
             role: 'player',
-          }) as any
+          }) as unknown
       );
 
       mockSocket.handshake.auth.token = 'valid-token';
