@@ -10,8 +10,8 @@ dotenv.config({ path: '.env.test' });
 
 // Mock environment variables for testing
 process.env.NODE_ENV = 'test';
-process.env.DATABASE_URL = process.env.DATABASE_URL || 'postgresql://test:test@localhost:5432/gang_gpt_test_db';
-process.env.REDIS_URL = process.env.REDIS_URL || 'redis://localhost:6379';
+process.env.DATABASE_URL = process.env.DATABASE_URL || 'postgresql://test:test@localhost:4831/gang_gpt_test_db';
+process.env.REDIS_URL = process.env.REDIS_URL || 'redis://localhost:4832';
 process.env.JWT_SECRET = process.env.JWT_SECRET || 'test-jwt-secret';
 process.env.JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET || 'test-jwt-refresh-secret';
 process.env.AZURE_OPENAI_ENDPOINT = process.env.AZURE_OPENAI_ENDPOINT || 'https://test.openai.azure.com/';

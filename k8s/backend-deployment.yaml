@@ -20,12 +20,13 @@ spec:
     spec:
       containers:
       - name: backend
-        image: ganggpt/backend:latest
-        ports:
-        - containerPort: 22005
+        image: ganggpt/backend:latest        ports:
+        - containerPort: 4828
         env:
         - name: NODE_ENV
           value: "production"
+        - name: PORT
+          value: "4828"
         - name: POSTGRES_HOST
           value: "ganggpt-postgres"
         - name: POSTGRES_PORT
@@ -71,17 +72,16 @@ spec:
             cpu: "250m"
           limits:
             memory: "1Gi"
-            cpu: "500m"
-        livenessProbe:
+            cpu: "500m"        livenessProbe:
           httpGet:
             path: /api/health/liveness
-            port: 22005
+            port: 4828
           initialDelaySeconds: 30
           periodSeconds: 10
         readinessProbe:
           httpGet:
             path: /api/health/readiness
-            port: 22005
+            port: 4828
           initialDelaySeconds: 5
           periodSeconds: 5
 ---
@@ -92,11 +92,10 @@ metadata:
   labels:
     app: ganggpt
     component: backend
-spec:
-  type: ClusterIP
+spec:  type: ClusterIP
   ports:
-  - port: 22005
-    targetPort: 22005
+  - port: 4828
+    targetPort: 4828
     protocol: TCP
   selector:
     app: ganggpt

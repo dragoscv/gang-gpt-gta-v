@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 export async function GET() {
   try {
     // Test connection to backend
-    const response = await fetch('http://localhost:3001/health');
+    const response = await fetch('http://localhost:4828/health');
 
     if (response.ok) {
       const data = await response.json(); return NextResponse.json({

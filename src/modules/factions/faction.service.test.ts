@@ -85,7 +85,9 @@ describe('FactionService', () => {
     factionService = new FactionService(mockPrisma);
   });
 
-  describe('createFaction', () => {    it('should create a faction successfully', async () => {      const mockFaction = {
+  describe('createFaction', () => {
+    it('should create a faction successfully', async () => {
+      const mockFaction = {
         id: 'faction-1',
         name: 'Test Gang',
         type: FactionType.GANG,
@@ -109,7 +111,8 @@ describe('FactionService', () => {
         rank: 'LEADER',
         joinedAt: new Date(),
         isActive: true,
-      });      const result = await factionService.createFaction({
+      });
+      const result = await factionService.createFaction({
         name: 'Test Gang',
         type: FactionType.GANG,
         description: 'A test gang',
@@ -129,18 +132,22 @@ describe('FactionService', () => {
           aiPersonality: expect.any(String),
         },
       });
-    });    it('should handle faction creation error', async () => {
+    });
+    it('should handle faction creation error', async () => {
       mockPrisma.faction.create.mockRejectedValue(new Error('Database error'));
 
-      await expect(factionService.createFaction({
-        name: 'Test Gang',
-        type: FactionType.GANG,
-        description: 'A test gang',
-        leaderId: 'leader-1',
-        color: '#FF0000',
-      })).rejects.toThrow('Database error');
+      await expect(
+        factionService.createFaction({
+          name: 'Test Gang',
+          type: FactionType.GANG,
+          description: 'A test gang',
+          leaderId: 'leader-1',
+          color: '#FF0000',
+        })
+      ).rejects.toThrow('Database error');
     });
-  });  describe('addMemberToFaction', () => {
+  });
+  describe('addMemberToFaction', () => {
     it('should add a member to faction successfully', async () => {
       const mockMembership = {
         id: 'membership-1',
@@ -155,7 +162,11 @@ describe('FactionService', () => {
       mockPrisma.factionMembership.create.mockResolvedValue(mockMembership);
       mockPrisma.factionEvent.create.mockResolvedValue({});
 
-      const result = await factionService.addMemberToFaction('char-1', 'faction-1', FactionRank.MEMBER);
+      const result = await factionService.addMemberToFaction(
+        'char-1',
+        'faction-1',
+        FactionRank.MEMBER
+      );
 
       expect(result.success).toBe(true);
       expect(result.membership).toEqual(mockMembership);
@@ -174,7 +185,11 @@ describe('FactionService', () => {
         isActive: true,
       });
 
-      const result = await factionService.addMemberToFaction('char-1', 'faction-1', FactionRank.MEMBER);
+      const result = await factionService.addMemberToFaction(
+        'char-1',
+        'faction-1',
+        FactionRank.MEMBER
+      );
 
       expect(result.success).toBe(false);
       expect(result.error).toBe('Character is already in a faction');
@@ -266,7 +281,8 @@ describe('FactionService', () => {
                 },
               },
             },
-          },          events: {
+          },
+          events: {
             orderBy: { createdAt: 'desc' },
             take: 10,
           },
@@ -305,7 +321,10 @@ describe('FactionService', () => {
 
       mockPrisma.faction.update.mockResolvedValue(mockUpdatedFaction);
 
-      const result = await factionService.updateFactionInfluence('faction-1', 10);
+      const result = await factionService.updateFactionInfluence(
+        'faction-1',
+        10
+      );
 
       expect(result).toEqual(mockUpdatedFaction);
       expect(mockPrisma.faction.update).toHaveBeenCalledWith({

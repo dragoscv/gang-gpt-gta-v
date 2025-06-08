@@ -73,7 +73,6 @@ temp/
 
 # RAGE:MP specific
 server-files/
-packages/
 client_packages/
 
 # AI model cache
@@ -96,5 +95,12 @@ prisma/migrations/
 dump.rdb
 
 # Monitoring
-grafana/
-prometheus/
+grafana/data/
+prometheus/data/
+
+# Additional cleanup patterns
+*.old
+*.tmp
+*.temp
+*~$*
+.#*

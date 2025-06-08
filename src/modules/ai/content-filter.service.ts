@@ -21,6 +21,12 @@ export class ContentFilter {
       /\b(real names|addresses|phone numbers|social security)\b/i,
       // External references
       /\b(real companies|real people|current events)\b/i,
+      // Strong profanity
+      /\b(fuck|fucking|shit|damn|hell)\b/i,
+      // Hate content
+      /\b(hate all|hate.*people|hate.*group)\b/i,
+      // Violence (including kill, murder, death)
+      /\b(kill|murder|death|violence)\b/i,
     ];
 
     this.flaggedCategories = new Map([
@@ -29,6 +35,8 @@ export class ContentFilter {
       [/\b(steal|robbery|theft|heist)\b/i, 'crime'],
       [/\b(gang|faction|territory)\b/i, 'faction'],
       [/\b(money|cash|profit|payment)\b/i, 'economy'],
+      [/\b(fuck|fucking|shit|damn|hell)\b/i, 'inappropriate'],
+      [/\b(hate all|hate.*people|hate.*group)\b/i, 'hate'],
     ]);
   }
 
@@ -38,30 +46,93 @@ export class ContentFilter {
   async filterContent(content: string): Promise<ContentFilterResult> {
     try {
       const flaggedCategories: string[] = [];
+      const contextualFlags: string[] = [];
       let isAppropriate = true;
+      let severity: 'none' | 'low' | 'medium' | 'high' = 'none';
+
+      // Handle empty or whitespace-only content
+      if (!content || content.trim().length === 0) {
+        return {
+          isAppropriate: true,
+          flaggedCategories: [],
+          contextualFlags: [],
+          severity: 'none',
+          confidence: 1.0,
+        };
+      }
 
       // Check for inappropriate patterns
       for (const pattern of this.inappropriatePatterns) {
         if (pattern.test(content)) {
           isAppropriate = false;
-          break;
+          if (pattern.source.includes('torture|mutilate|dismember')) {
+            severity = 'high';
+            flaggedCategories.push('violence');
+          } else if (pattern.source.includes('sexual|explicit|adult content')) {
+            severity = 'high';
+            flaggedCategories.push('inappropriate');
+          } else if (pattern.source.includes('racial slurs|hate speech')) {
+            severity = 'high';
+            flaggedCategories.push('hate');
+          } else if (pattern.source.includes('fuck|fucking|shit|damn|hell')) {
+            severity = 'medium';
+            flaggedCategories.push('inappropriate');
+          } else if (
+            pattern.source.includes('hate all|hate.*people|hate.*group')
+          ) {
+            severity = 'high';
+            flaggedCategories.push('hate');
+          } else if (pattern.source.includes('kill|murder|death|violence')) {
+            severity = 'high';
+            flaggedCategories.push('violence');
+          } else {
+            severity = 'medium';
+            flaggedCategories.push('inappropriate');
+          }
         }
       }
 
-      // Identify content categories
+      // Identify content categories and contextual flags
       for (const [pattern, category] of this.flaggedCategories.entries()) {
         if (pattern.test(content)) {
+          if (category === 'violence' && !isAppropriate) {
+            severity = 'high';
+          } else if (category === 'substance' && !isAppropriate) {
+            severity = 'medium';
+          }
           flaggedCategories.push(category);
+          contextualFlags.push(category);
         }
       }
 
+      // Additional contextual pattern checks
+      if (/\b(crime|heist|robbery)\b/i.test(content)) {
+        contextualFlags.push('crime');
+      }
+      if (/\b(gang|faction|territory|crew)\b/i.test(content)) {
+        contextualFlags.push('faction');
+      }
+      if (/\b(money|cash|profit|economy|business)\b/i.test(content)) {
+        contextualFlags.push('economy');
+      }
+
+      // Remove duplicates from arrays
+      const uniqueFlaggedCategories = [...new Set(flaggedCategories)];
+      const uniqueContextualFlags = [...new Set(contextualFlags)];
+
       // Calculate confidence based on content length and clarity
-      const confidence = this.calculateConfidence(content, flaggedCategories);
+      const confidence = this.calculateConfidence(
+        content,
+        uniqueFlaggedCategories
+      );
 
       const result: ContentFilterResult = {
         isAppropriate,
-        flaggedCategories,
+        flaggedCategories: uniqueFlaggedCategories,
+        contextualFlags: uniqueContextualFlags,
+        severity,
         confidence,
+        suggestedAlternative: null,
       };
 
       // Generate alternative if inappropriate
@@ -71,7 +142,9 @@ export class ContentFilter {
 
       logger.debug('Content filtered', {
         isAppropriate,
-        flaggedCategories: flaggedCategories.length,
+        flaggedCategories: uniqueFlaggedCategories.length,
+        contextualFlags: uniqueContextualFlags.length,
+        severity,
         confidence,
       });
 
@@ -85,6 +158,8 @@ export class ContentFilter {
       return {
         isAppropriate: false,
         flaggedCategories: ['error'],
+        contextualFlags: [],
+        severity: 'high',
         confidence: 0,
         suggestedAlternative:
           'I need to think about my response more carefully.',

@@ -1366,4 +1366,339 @@ Format the response as JSON:
   private getLocationNameFromCoords(x: number, y: number, z: number): string {
     return this.worldService.getLocationNameFromCoordinates(x, y, z);
   }
+
+  /**
+   * Generate a mission for a player
+   */
+  async generateMission(
+    playerId: string,
+    missionType: MissionType
+  ): Promise<any> {
+    try {
+      // Check if player exists
+      const player = await this.prisma.user.findUnique({
+        where: { id: playerId },
+        include: { characters: true },
+      });
+
+      if (!player) {
+        throw new Error(`Player not found: ${playerId}`);
+      }
+
+      // Use the advanced mission generation with context
+      const context: MissionGenerationContext = {
+        playerLevel: 1, // Default
+        difficulty: 1,
+        factionContext: {
+          factionId: undefined,
+          playerLevel: 1,
+        },
+        availableLocations: ['Los Santos'],
+        recentMissions: [],
+        playerPreferences: {
+          missionTypes: [missionType],
+          difficultyPreference: 'medium',
+          playstyle: 'mixed',
+          teamPreference: 'solo',
+        },
+      };
+
+      return await this.generateAdvancedMission(playerId, context);
+    } catch (error) {
+      logger.error('Failed to generate mission', {
+        playerId,
+        missionType,
+        error,
+      });
+      throw error;
+    }
+  }
+
+  /**
+   * Get missions for a player (by character)
+   */
+  async getMissionsByPlayer(playerId: string): Promise<any[]> {
+    try {
+      const cacheKey = `missions:player:${playerId}`;
+
+      // Check cache first
+      const cached = await this.cache.getTemporary(cacheKey);
+      if (cached && Array.isArray(cached)) {
+        return cached;
+      }
+
+      // Get player's characters first
+      const user = await this.prisma.user.findUnique({
+        where: { id: playerId },
+        include: { characters: true },
+      });
+
+      if (!user || user.characters.length === 0) {
+        return [];
+      }
+
+      // Get missions for all player's characters
+      const characterIds = user.characters.map(char => char.id);
+      const missions = await this.prisma.mission.findMany({
+        where: { characterId: { in: characterIds } },
+        orderBy: { createdAt: 'desc' },
+      });
+
+      // Cache the result
+      await this.cache.setTemporary(cacheKey, missions, this.MISSION_CACHE_TTL);
+
+      return missions;
+    } catch (error) {
+      logger.error('Failed to get missions for player', { playerId, error });
+      throw error;
+    }
+  }
+
+  /**
+   * Start a mission
+   */
+  async startMission(missionId: string, playerId: string): Promise<any> {
+    try {
+      // Find the mission
+      const mission = await this.prisma.mission.findUnique({
+        where: { id: missionId },
+        include: { character: true },
+      });
+
+      if (!mission) {
+        throw new Error(`Mission not found: ${missionId}`);
+      }
+
+      if (mission.character.userId !== playerId) {
+        throw new Error('Mission does not belong to this player');
+      }
+
+      if (mission.status !== 'AVAILABLE') {
+        throw new Error('Mission is not available for starting');
+      }
+
+      // Update mission status (only update status since schema doesn't have startedAt)
+      const updatedMission = await this.prisma.mission.update({
+        where: { id: missionId },
+        data: { status: 'IN_PROGRESS' },
+      });
+
+      // Clear cache
+      await this.cache.deleteKey(`missions:player:${playerId}`);
+
+      return updatedMission;
+    } catch (error) {
+      logger.error('Failed to start mission', { missionId, playerId, error });
+      throw error;
+    }
+  }
+
+  /**
+   * Complete a mission
+   */
+  async completeMission(missionId: string, playerId: string): Promise<any> {
+    try {
+      // Find the mission
+      const mission = await this.prisma.mission.findUnique({
+        where: { id: missionId },
+        include: { character: true },
+      });
+
+      if (!mission) {
+        throw new Error(`Mission not found: ${missionId}`);
+      }
+
+      if (mission.character.userId !== playerId) {
+        throw new Error('Mission does not belong to this player');
+      }
+
+      if (mission.status !== 'IN_PROGRESS') {
+        throw new Error('Mission is not in progress');
+      }
+
+      // Update mission status and completion time
+      const updatedMission = await this.prisma.mission.update({
+        where: { id: missionId },
+        data: {
+          status: 'COMPLETED',
+          completedAt: new Date(),
+        },
+      });
+
+      // Clear cache
+      await this.cache.deleteKey(`missions:player:${playerId}`);
+
+      return updatedMission;
+    } catch (error) {
+      logger.error('Failed to complete mission', {
+        missionId,
+        playerId,
+        error,
+      });
+      throw error;
+    }
+  }
+
+  /**
+   * Cancel a mission
+   */
+  async cancelMission(missionId: string, playerId: string): Promise<any> {
+    try {
+      // Find the mission
+      const mission = await this.prisma.mission.findUnique({
+        where: { id: missionId },
+        include: { character: true },
+      });
+
+      if (!mission) {
+        throw new Error(`Mission not found: ${missionId}`);
+      }
+
+      if (mission.character.userId !== playerId) {
+        throw new Error('Mission does not belong to this player');
+      }
+
+      // Update mission status (schema doesn't have cancelledAt field)
+      const updatedMission = await this.prisma.mission.update({
+        where: { id: missionId },
+        data: { status: 'CANCELLED' },
+      });
+
+      // Clear cache
+      await this.cache.deleteKey(`missions:player:${playerId}`);
+
+      return updatedMission;
+    } catch (error) {
+      logger.error('Failed to cancel mission', { missionId, playerId, error });
+      throw error;
+    }
+  }
+
+  /**
+   * Update objective progress
+   * Note: objectives are stored as JSON string in the schema
+   */
+  async updateObjectiveProgress(
+    missionId: string,
+    objectiveId: string,
+    progress: number,
+    playerId: string
+  ): Promise<any> {
+    try {
+      // Find the mission
+      const mission = await this.prisma.mission.findUnique({
+        where: { id: missionId },
+        include: { character: true },
+      });
+
+      if (!mission) {
+        throw new Error(`Mission not found: ${missionId}`);
+      }
+
+      if (mission.character.userId !== playerId) {
+        throw new Error('Mission does not belong to this player');
+      }
+
+      // Parse objectives JSON
+      let objectives;
+      try {
+        objectives = JSON.parse(mission.objectives);
+      } catch {
+        objectives = [];
+      }
+
+      // Find and update the objective
+      const objectiveIndex = objectives.findIndex(
+        (obj: any) => obj.id === objectiveId
+      );
+      if (objectiveIndex === -1) {
+        throw new Error(`Objective not found: ${objectiveId}`);
+      }
+
+      objectives[objectiveIndex].progress = progress;
+
+      // Update mission with new objectives
+      await this.prisma.mission.update({
+        where: { id: missionId },
+        data: { objectives: JSON.stringify(objectives) },
+      });
+
+      // Clear cache
+      await this.cache.deleteKey(`missions:player:${playerId}`);
+
+      return { ...objectives[objectiveIndex], missionId };
+    } catch (error) {
+      logger.error('Failed to update objective progress', {
+        missionId,
+        objectiveId,
+        progress,
+        playerId,
+        error,
+      });
+      throw error;
+    }
+  }
+
+  /**
+   * Get mission statistics for a player
+   */
+  async getMissionStatistics(playerId: string): Promise<any> {
+    try {
+      const cacheKey = `mission-stats:${playerId}`;
+
+      // Check cache first
+      const cached = await this.cache.getTemporary(cacheKey);
+      if (cached) {
+        return cached;
+      }
+
+      // Get player's characters first
+      const user = await this.prisma.user.findUnique({
+        where: { id: playerId },
+        include: { characters: true },
+      });
+
+      if (!user || user.characters.length === 0) {
+        return {
+          total: 0,
+          completed: 0,
+          failed: 0,
+          inProgress: 0,
+          byType: {},
+        };
+      }
+
+      // Get mission statistics from database
+      const characterIds = user.characters.map(char => char.id);
+      const missions = await this.prisma.mission.findMany({
+        where: { characterId: { in: characterIds } },
+      });
+
+      const stats = {
+        total: missions.length,
+        completed: missions.filter(m => m.status === 'COMPLETED').length,
+        failed: missions.filter(m => m.status === 'FAILED').length,
+        inProgress: missions.filter(m => m.status === 'IN_PROGRESS').length,
+        byType: {} as Record<string, { total: number; completed: number }>,
+      };
+
+      // Group by type
+      const missionTypes = Object.values(MissionType);
+      for (const type of missionTypes) {
+        const typeMissions = missions.filter(m => m.type === type);
+        stats.byType[type] = {
+          total: typeMissions.length,
+          completed: typeMissions.filter(m => m.status === 'COMPLETED').length,
+        };
+      }
+
+      // Cache the result
+      await this.cache.setTemporary(cacheKey, stats, this.MISSION_CACHE_TTL);
+
+      return stats;
+    } catch (error) {
+      logger.error('Failed to get mission statistics', { playerId, error });
+      throw error;
+    }
+  }
 }

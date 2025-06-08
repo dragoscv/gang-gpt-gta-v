@@ -106,17 +106,17 @@ const config: Config = {
   },
 
   server: {
-    port: parseInt(process.env.PORT || '22005', 10),
+    port: parseInt(process.env.PORT || '4828', 10),
     environment: process.env.NODE_ENV || 'development',
-    corsOrigin: process.env.CORS_ORIGIN || 'http://localhost:3000',
+    corsOrigin: process.env.CORS_ORIGIN || 'http://localhost:4829',
   },
 
   database: {
-    url: process.env.DATABASE_URL || 'postgresql://localhost:5432/gang_gpt_db',
+    url: process.env.DATABASE_URL || 'postgresql://localhost:4831/gang_gpt_db',
     ssl: process.env.DATABASE_SSL === 'true',
   },
   redis: {
-    url: process.env.REDIS_URL || 'redis://localhost:6379',
+    url: process.env.REDIS_URL || 'redis://localhost:4832',
     ...(process.env.REDIS_PASSWORD && { password: process.env.REDIS_PASSWORD }),
   },
 

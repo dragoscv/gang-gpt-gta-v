@@ -30,9 +30,9 @@ export let options = {
   },
 };
 
-const BASE_URL = 'http://localhost:22005';
+const BASE_URL = 'http://localhost:4828';
 
-export default function() {
+export default function () {
   // Health check
   let healthResponse = http.get(`${BASE_URL}/api/health`);
   check(healthResponse, {

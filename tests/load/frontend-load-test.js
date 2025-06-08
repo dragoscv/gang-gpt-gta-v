@@ -21,7 +21,7 @@ export const options = {
   },
 };
 
-const FRONTEND_URL = __ENV.FRONTEND_URL || 'http://localhost:3000';
+const FRONTEND_URL = __ENV.FRONTEND_URL || 'http://localhost:4829';
 
 export default function () {
   // Test homepage

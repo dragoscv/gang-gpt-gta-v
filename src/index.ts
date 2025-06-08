@@ -3,7 +3,7 @@
  * This demonstrates the AI-powered RAGE:MP server setup
  */
 
-import express from 'express';
+import express, { type Express } from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import http from 'http';
@@ -22,8 +22,11 @@ import { WebSocketManager } from '@/infrastructure/websocket/websocket.manager';
 import { appRouter } from './api';
 import { createTRPCContext } from './api/trpc';
 
-const app = express();
+const app: Express = express();
 const server = http.createServer(app);
+
+// Export app for testing
+export { app };
 
 // Initialize services
 const playerService = new PlayerService(db.prisma);

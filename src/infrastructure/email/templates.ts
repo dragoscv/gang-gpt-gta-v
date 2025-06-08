@@ -199,13 +199,13 @@ Privacy Policy: https://ganggpt.com/privacy`,
             <p>We received a request to reset your password for your <strong>GangGPT</strong> account. If you didn't make this request, you can safely ignore this email.</p>
             <p>To reset your password, click the button below:</p>
             <p style="text-align: center;">
-              <a href="${process.env.FRONTEND_URL || 'http://localhost:3001'}/auth/reset-password?token=${resetToken}" class="btn">Reset Password</a>
+              <a href="${process.env.FRONTEND_URL || 'http://localhost:4829'}/auth/reset-password?token=${resetToken}" class="btn">Reset Password</a>
             </p>
             <div class="warning">
               <p><strong>Important:</strong> This link will expire in 1 hour for security reasons.</p>
             </div>
             <p>If the button above doesn't work, copy and paste the following link into your browser:</p>
-            <p style="word-break: break-all;">${process.env.FRONTEND_URL || 'http://localhost:3001'}/auth/reset-password?token=${resetToken}</p>
+            <p style="word-break: break-all;">${process.env.FRONTEND_URL || 'http://localhost:4829'}/auth/reset-password?token=${resetToken}</p>
             <p>For security, this password reset link will expire in 1 hour. If you need a new link, you can request another password reset.</p>
             <p>If you didn't request a password reset, please contact our support team immediately at <a href="mailto:security@ganggpt.com" style="color: #ff4136;">security@ganggpt.com</a>.</p>
           </div>
@@ -227,7 +227,7 @@ Hello,
 We received a request to reset your password for your GangGPT account. If you didn't make this request, you can safely ignore this email.
 
 To reset your password, click the link below:
-${process.env.FRONTEND_URL || 'http://localhost:3001'}/auth/reset-password?token=${resetToken}
+${process.env.FRONTEND_URL || 'http://localhost:4829'}/auth/reset-password?token=${resetToken}
 
 Important: This link will expire in 1 hour for security reasons.
 

@@ -89,7 +89,7 @@ export function Statistics() {
 
         // Try direct REST API as a fallback
         try {
-          const baseUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:22005';
+          const baseUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:4828';
           const restUrl = `${baseUrl}/api/stats`;
           console.log(`Trying direct REST API URL: ${restUrl}`);
 

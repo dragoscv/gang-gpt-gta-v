@@ -46,7 +46,7 @@ module.exports = {
         format: ['PascalCase'],
       },
       {
-        selector: 'class',        format: ['PascalCase'],
+        selector: 'class', format: ['PascalCase'],
       },
       {
         selector: 'enum',
@@ -70,7 +70,7 @@ module.exports = {
 
     // Prettier Integration
     'prettier/prettier': 'error',
-  },  ignorePatterns: [
+  }, ignorePatterns: [
     'dist/',
     'node_modules/',
     'coverage/',

@@ -9,10 +9,9 @@ export const trpc = createTRPCReact<any>();
 function getBaseUrl() {
   const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
   console.log('Environment NEXT_PUBLIC_BACKEND_URL:', backendUrl);
-
   if (typeof window !== 'undefined') {
     // browser should use the public environment variable
-    const url = backendUrl || 'http://localhost:22005';
+    const url = backendUrl || 'http://localhost:4828';
     console.log('Browser base URL:', url);
     return url;
   }
@@ -24,8 +23,8 @@ function getBaseUrl() {
   }
 
   // development fallback
-  console.log('Fallback base URL: http://localhost:22005');
-  return 'http://localhost:22005';
+  console.log('Fallback base URL: http://localhost:4828');
+  return 'http://localhost:4828';
 }
 
 // For now, let's also export a simple API client for direct HTTP calls

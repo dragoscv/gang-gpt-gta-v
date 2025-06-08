@@ -7,7 +7,9 @@
   "bind": "0.0.0.0:22005",
   "language": "en",
   "website": "https://ganggpt.io",
-  "description": ["Advanced AI-powered GTA V roleplay with dynamic factions, intelligent NPCs, and immersive storytelling."],
+  "description": [
+    "Advanced AI-powered GTA V roleplay with dynamic factions, intelligent NPCs, and immersive storytelling."
+  ],
   "icon": "",
   "modules": [
     "NodeJS"

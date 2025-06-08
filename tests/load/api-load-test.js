@@ -23,7 +23,7 @@ export const options = {
   },
 };
 
-const BASE_URL = __ENV.TARGET_URL || 'http://localhost:22005';
+const BASE_URL = __ENV.TARGET_URL || 'http://localhost:4828';
 
 export default function () {
   // Test health endpoint

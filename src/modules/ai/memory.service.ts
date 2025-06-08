@@ -194,10 +194,10 @@ export class MemoryService {
           targetId: playerId,
           targetType: 'PLAYER',
           relationshipType: 'ACQUAINTANCE',
-          trust: changes.trust || 0,
-          respect: changes.respect || 0,
-          fear: changes.fear || 0,
-          loyalty: changes.loyalty || 0,
+          trust: Math.max(-1, Math.min(1, changes.trust || 0)),
+          respect: Math.max(-1, Math.min(1, changes.respect || 0)),
+          fear: Math.max(-1, Math.min(1, changes.fear || 0)),
+          loyalty: Math.max(-1, Math.min(1, changes.loyalty || 0)),
           lastInteraction: new Date(),
         },
       });
@@ -400,6 +400,7 @@ export class MemoryService {
       excitement: 0.4,
       stress: 0.3,
       confidence: 0.6,
+      dominantEmotion: 'neutral',
     };
   }
 

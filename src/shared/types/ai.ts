@@ -97,11 +97,13 @@ export interface NPCBehaviorConfig {
  * NPC personality traits
  */
 export interface NPCPersonality {
-  openness: number; // 0 to 100
-  conscientiousness: number; // 0 to 100
-  extraversion: number; // 0 to 100
-  agreeableness: number; // 0 to 100
-  neuroticism: number; // 0 to 100
+  openness?: number; // 0 to 100
+  conscientiousness?: number; // 0 to 100
+  extraversion?: number; // 0 to 100
+  agreeableness?: number; // 0 to 100
+  neuroticism?: number; // 0 to 100
+  emotionalState?: EmotionalState;
+  traits?: PersonalityTraits;
 }
 
 /**
@@ -254,6 +256,7 @@ export interface EmotionalState {
   excitement: number;
   stress: number;
   confidence: number;
+  dominantEmotion?: string;
 }
 
 /**
@@ -275,7 +278,9 @@ export interface ContentFilterResult {
   isAppropriate: boolean;
   flaggedCategories: string[];
   confidence: number;
-  suggestedAlternative?: string;
+  severity?: 'none' | 'low' | 'medium' | 'high';
+  contextualFlags?: string[];
+  suggestedAlternative?: string | null;
 }
 
 /**

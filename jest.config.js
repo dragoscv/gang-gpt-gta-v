@@ -13,7 +13,7 @@ export default {
     },
     transformIgnorePatterns: [
         'node_modules/(?!(superjson|@trpc/.*|@prisma/.*|@next/.*)/)'
-    ],    collectCoverageFrom: [
+    ], collectCoverageFrom: [
         'src/**/*.ts',
         '!src/**/*.d.ts',
         '!src/**/*.test.ts',

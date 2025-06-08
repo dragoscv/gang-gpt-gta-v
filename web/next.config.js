@@ -5,13 +5,13 @@ const nextConfig = {
   }, env: {
     NEXTAUTH_URL: process.env.NEXTAUTH_URL,
     NEXTAUTH_SECRET: process.env.NEXTAUTH_SECRET,
-    BACKEND_URL: process.env.BACKEND_URL || 'http://localhost:3001',
+    BACKEND_URL: process.env.BACKEND_URL || 'http://localhost:4828',
   },
   async rewrites() {
     return [
       {
         source: '/api/server/:path*',
-        destination: `${process.env.BACKEND_URL || 'http://localhost:3001'}/api/:path*`,
+        destination: `${process.env.BACKEND_URL || 'http://localhost:4828'}/api/:path*`,
       },
     ];
   },

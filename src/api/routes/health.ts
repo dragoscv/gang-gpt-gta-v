@@ -416,8 +416,49 @@ export function createHealthCheckRouter(
     }
   });
 
-  // Liveness probe (for load balancers)
-  router.get('/health/live', async (_req: Request, res: Response) => {
+  // Detailed health check
+  router.get('/health/detailed', async (_req: Request, res: Response) => {
+    try {
+      const health = await healthService.checkHealth();
+      res.status(health.status === 'healthy' ? 200 : 503).json(health);
+    } catch (error) {
+      logger.error('Detailed health check failed:', error);
+      res.status(503).json({
+        status: 'unhealthy',
+        timestamp: new Date().toISOString(),
+        error: error instanceof Error ? error.message : 'Unknown error',
+      });
+    }
+  });
+
+  // Readiness check (alias for ready)
+  router.get('/health/readiness', async (_req: Request, res: Response) => {
+    try {
+      const isReady = await healthService.isReady();
+
+      if (isReady) {
+        res
+          .status(200)
+          .json({ status: 'ready', timestamp: new Date().toISOString() });
+      } else {
+        res.status(503).json({
+          status: 'not ready',
+          timestamp: new Date().toISOString(),
+          checks: { database: 'not ready', redis: 'not ready' },
+        });
+      }
+    } catch (error) {
+      res.status(503).json({
+        status: 'not ready',
+        timestamp: new Date().toISOString(),
+        error: error instanceof Error ? error.message : 'Unknown error',
+        checks: { database: 'not ready', redis: 'not ready' },
+      });
+    }
+  });
+
+  // Liveness check (alias for live)
+  router.get('/health/liveness', async (_req: Request, res: Response) => {
     try {
       const isAlive = await healthService.isAlive();
 
@@ -439,31 +480,38 @@ export function createHealthCheckRouter(
     }
   });
 
-  // Readiness probe (for Kubernetes)
-  router.get('/health/ready', async (_req: Request, res: Response) => {
+  // System metrics endpoint
+  router.get('/health/metrics', async (_req: Request, res: Response) => {
     try {
-      const isReady = await healthService.isReady();
+      const memUsage = process.memoryUsage();
+      const uptime = process.uptime();
 
-      if (isReady) {
-        res
-          .status(200)
-          .json({ status: 'ready', timestamp: new Date().toISOString() });
-      } else {
-        res
-          .status(503)
-          .json({ status: 'not-ready', timestamp: new Date().toISOString() });
-      }
+      res.status(200).json({
+        timestamp: new Date().toISOString(),
+        uptime,
+        memory: {
+          rss: memUsage.rss,
+          heapTotal: memUsage.heapTotal,
+          heapUsed: memUsage.heapUsed,
+          external: memUsage.external,
+        },
+        process: {
+          pid: process.pid,
+          version: process.version,
+          platform: process.platform,
+        },
+      });
     } catch (error) {
       res.status(503).json({
-        status: 'not-ready',
-        timestamp: new Date().toISOString(),
         error: error instanceof Error ? error.message : 'Unknown error',
+        timestamp: new Date().toISOString(),
       });
     }
   });
+
   // Service-specific health checks
   router.get(
-    '/health/:service',
+    '/health/service/:service',
     async (req: Request, res: Response): Promise<void> => {
       const { service } = req.params;
 

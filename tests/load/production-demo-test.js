@@ -7,7 +7,7 @@ export let options = {
 };
 
 export default function () {
-  let response = http.get('http://localhost:22005/health');
+  let response = http.get('http://localhost:4828/health');
   check(response, {
     'status is 200': (r) => r.status === 200,
     'response time < 200ms': (r) => r.timings.duration < 200,

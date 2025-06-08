@@ -11,7 +11,7 @@ describe('API Response Types', () => {
     it('should create success response with data', () => {
       const data = { id: 1, name: 'Test' };
       const response = createSuccessResponse(data, 'Success message');
-      
+
       expect(response.success).toBe(true);
       expect(response.data).toEqual(data);
       expect(response.message).toBe('Success message');
@@ -21,7 +21,7 @@ describe('API Response Types', () => {
     it('should create success response without message', () => {
       const data = { id: 1 };
       const response = createSuccessResponse(data);
-      
+
       expect(response.success).toBe(true);
       expect(response.data).toEqual(data);
       expect(response.message).toBeUndefined();
@@ -30,8 +30,11 @@ describe('API Response Types', () => {
 
   describe('createErrorResponse', () => {
     it('should create error response', () => {
-      const response = createErrorResponse('Something went wrong', 'VALIDATION_ERROR');
-      
+      const response = createErrorResponse(
+        'Something went wrong',
+        'VALIDATION_ERROR'
+      );
+
       expect(response.success).toBe(false);
       expect(response.error).toBe('Something went wrong');
       expect(response.code).toBe('VALIDATION_ERROR');

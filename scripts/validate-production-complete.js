@@ -42,12 +42,12 @@ function makeRequest(url, options = {}) {
       res.on('data', chunk => data += chunk);
       res.on('end', () => resolve({ status: res.statusCode, data, headers: res.headers }));
     });
-    
+
     req.on('timeout', () => {
       req.destroy();
       reject(new Error('Request timeout'));
     });
-    
+
     req.on('error', reject);
   });
 }
@@ -59,7 +59,7 @@ async function runTest(name, testFunc) {
     const startTime = Date.now();
     const result = await testFunc();
     const duration = Date.now() - startTime;
-    
+
     if (result.status === 'pass') {
       results.passed++;
       success(`${name}: ${result.message} (${duration}ms)`);
@@ -70,7 +70,7 @@ async function runTest(name, testFunc) {
       results.failed++;
       error(`${name}: ${result.message} (${duration}ms)`);
     }
-    
+
     results.details.push({
       name,
       status: result.status,
@@ -142,7 +142,7 @@ async function testHealthEndpoints() {
     '/api/health/liveness',
     '/api/health/readiness'
   ];
-  
+
   for (const endpoint of endpoints) {
     try {
       const response = await makeRequest(`${config.backendUrl}${endpoint}`);
@@ -153,7 +153,7 @@ async function testHealthEndpoints() {
       return { status: 'fail', message: `Health endpoint ${endpoint} failed: ${err.message}` };
     }
   }
-  
+
   return { status: 'pass', message: 'All health endpoints responding' };
 }
 
@@ -163,7 +163,7 @@ async function testTRPCEndpoints() {
     '/api/trpc/auth.me',
     '/api/trpc/stats.getAll'
   ];
-  
+
   for (const endpoint of endpoints) {
     try {
       const response = await makeRequest(`${config.backendUrl}${endpoint}`);
@@ -174,7 +174,7 @@ async function testTRPCEndpoints() {
       return { status: 'fail', message: `tRPC endpoint ${endpoint} failed: ${err.message}` };
     }
   }
-  
+
   return { status: 'pass', message: 'All tRPC endpoints accessible' };
 }
 
@@ -208,15 +208,15 @@ async function testSecurityHeaders() {
   try {
     const response = await makeRequest(`${config.backendUrl}/api/health`);
     const headers = response.headers;
-    
+
     const requiredHeaders = [
       'x-frame-options',
       'x-content-type-options',
       'x-xss-protection'
     ];
-    
+
     const missingHeaders = requiredHeaders.filter(header => !headers[header]);
-    
+
     if (missingHeaders.length === 0) {
       return { status: 'pass', message: 'All security headers present' };
     } else if (missingHeaders.length <= 1) {
@@ -232,13 +232,13 @@ async function testSecurityHeaders() {
 async function testRateLimiting() {
   try {
     // Make multiple rapid requests to test rate limiting
-    const requests = Array(10).fill().map(() => 
+    const requests = Array(10).fill().map(() =>
       makeRequest(`${config.backendUrl}/api/health`)
     );
-    
+
     const responses = await Promise.all(requests);
     const rateLimited = responses.some(r => r.status === 429);
-    
+
     if (rateLimited) {
       return { status: 'pass', message: 'Rate limiting active' };
     } else {
@@ -254,15 +254,15 @@ async function testPerformance() {
   try {
     const iterations = 5;
     const times = [];
-    
+
     for (let i = 0; i < iterations; i++) {
       const startTime = Date.now();
       await makeRequest(`${config.backendUrl}/api/health`);
       times.push(Date.now() - startTime);
     }
-    
+
     const avgTime = times.reduce((a, b) => a + b) / times.length;
-    
+
     if (avgTime < 100) {
       return { status: 'pass', message: `Average response time: ${avgTime.toFixed(1)}ms (excellent)` };
     } else if (avgTime < 200) {
@@ -285,9 +285,9 @@ async function testEnvironmentVariables() {
     'k8s/backend-deployment.yaml',
     'k8s/frontend-deployment.yaml'
   ];
-  
+
   const missingFiles = requiredFiles.filter(file => !fs.existsSync(file));
-  
+
   if (missingFiles.length === 0) {
     return { status: 'pass', message: 'All configuration files present' };
   } else {
@@ -301,9 +301,9 @@ async function testSSLReadiness() {
     'nginx/conf.d/frontend.conf',
     'nginx/conf.d/backend.conf'
   ];
-  
+
   const missingSslFiles = sslFiles.filter(file => !fs.existsSync(file));
-  
+
   if (missingSslFiles.length === 0) {
     return { status: 'pass', message: 'SSL/Nginx configuration ready' };
   } else {
@@ -317,9 +317,9 @@ async function testMonitoringSetup() {
     'grafana/provisioning/datasources/prometheus.yml',
     'prometheus/prometheus.yml'
   ];
-  
+
   const missingFiles = monitoringFiles.filter(file => !fs.existsSync(file));
-  
+
   if (missingFiles.length === 0) {
     return { status: 'pass', message: 'Monitoring configuration ready' };
   } else {

@@ -115,7 +115,7 @@ class EmailService {
     email: string,
     resetToken: string
   ): Promise<boolean> {
-    const resetUrl = `${process.env.FRONTEND_URL || 'http://localhost:3001'}/auth/reset-password?token=${resetToken}`;
+    const resetUrl = `${process.env.FRONTEND_URL || 'http://localhost:4829'}/auth/reset-password?token=${resetToken}`;
 
     const html = `
       <!DOCTYPE html>
@@ -195,7 +195,7 @@ GangGPT - AI-Powered Los Santos
   }
 
   async sendWelcomeEmail(email: string, username: string): Promise<boolean> {
-    const loginUrl = `${process.env.FRONTEND_URL || 'http://localhost:3001'}/auth/login`;
+    const loginUrl = `${process.env.FRONTEND_URL || 'http://localhost:4829'}/auth/login`;
 
     const html = `
       <!DOCTYPE html>

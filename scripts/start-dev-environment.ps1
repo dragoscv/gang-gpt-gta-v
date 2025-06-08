@@ -1,7 +1,7 @@
 # Start both the backend API server and frontend web server
 # First, ensure ports are free
-$backend_port = 22005
-$frontend_port = 3000
+$backend_port = 4828
+$frontend_port = 4829
 
 # Check if backend port is in use and kill the process if it is
 $backend_process = Get-NetTCPConnection -LocalPort $backend_port -ErrorAction SilentlyContinue | Select-Object -ExpandProperty OwningProcess
@@ -29,7 +29,7 @@ Start-Sleep -Seconds 3
 Start-Process powershell -ArgumentList "-NoExit", "-File", "$PSScriptRoot\start-frontend.ps1" -WorkingDirectory $PSScriptRoot
 
 # Open the application in the default browser
-Start-Process "http://localhost:3000"
+Start-Process "http://localhost:4829"
 
 Write-Host "Gang-GPT development environment started."
 Write-Host "Backend API: http://localhost:$backend_port"

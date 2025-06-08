@@ -188,7 +188,8 @@ class ProductionValidator {
   private async validateDatabase(): Promise<ValidationResult[]> {
     const results: ValidationResult[] = [];
 
-    try {      const databaseUrl = process.env.DATABASE_URL;
+    try {
+      const databaseUrl = process.env.DATABASE_URL;
       if (!databaseUrl) {
         results.push({
           service: 'Database',
@@ -315,7 +316,7 @@ class ProductionValidator {
           },
         ],
         max_tokens: 20,
-      });      if (response.choices && response.choices.length > 0) {
+      }); if (response.choices && response.choices.length > 0) {
         const content = response.choices[0].message?.content;
         if (content && content.includes('Production validation test successful')) {
           results.push({

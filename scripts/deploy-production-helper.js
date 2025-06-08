@@ -86,7 +86,7 @@ logStep('Environment Configuration', 'Setting up production environment variable
 if (!fs.existsSync('.env.production')) {
   logError('.env.production file not found');
   logInfo('Creating .env.production from template...');
-  
+
   if (fs.existsSync('production-secrets/.env.production.new')) {
     fs.copyFileSync('production-secrets/.env.production.new', '.env.production');
     logSuccess('Created .env.production from template');

@@ -39,7 +39,7 @@ spec:
           service:
             name: ganggpt-backend-service
             port:
-              number: 22005
+              number: 4828
 ---
 # GangGPT HPA (Horizontal Pod Autoscaler)
 apiVersion: autoscaling/v2

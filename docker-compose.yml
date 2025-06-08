@@ -15,7 +15,7 @@ services:
       - postgres_data:/var/lib/postgresql/data
       - ./scripts/init-db.sql:/docker-entrypoint-initdb.d/init-db.sql:ro
     ports:
-      - '5432:5432'
+      - '4831:5432'
     networks:
       - ganggpt-network
     healthcheck:
@@ -33,7 +33,7 @@ services:
     volumes:
       - redis_data:/data
     ports:
-      - '6379:6379'
+      - '4832:6379'
     networks:
       - ganggpt-network
     healthcheck:
@@ -60,11 +60,11 @@ services:
       AZURE_OPENAI_API_VERSION: ${AZURE_OPENAI_API_VERSION}
       AZURE_OPENAI_MODEL: ${AZURE_OPENAI_MODEL}
       RAGE_MP_HOST: 0.0.0.0
-      RAGE_MP_PORT: 22005
-      API_PORT: 3001
-      FRONTEND_PORT: 3000
+      RAGE_MP_PORT: 4830
+      API_PORT: 4828
+      FRONTEND_PORT: 4829
       ENABLE_CORS: true
-      CORS_ORIGINS: http://localhost:3000,http://localhost:3002
+      CORS_ORIGINS: http://localhost:4829,http://localhost:4830
       RATE_LIMIT_WINDOW_MS: 900000
       RATE_LIMIT_MAX_REQUESTS: 100
       LOG_LEVEL: debug
@@ -75,9 +75,9 @@ services:
       - /app/web/node_modules
       - logs_data:/app/logs
     ports:
-      - '3001:3001'  # Backend API
-      - '3000:3000'  # Frontend
-      - '22005:22005' # RAGE:MP
+      - '4828:4828'  # Backend API
+      - '4829:4829'  # Frontend
+      - '4830:4830' # RAGE:MP
     depends_on:
       postgres:
         condition: service_healthy
@@ -191,7 +191,7 @@ services:
       - grafana_data:/var/lib/grafana
       - ./monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
     ports:
-      - '3001:3000'
+      - '4829:3000'
     depends_on:
       - prometheus
     networks:

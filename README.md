@@ -24,8 +24,8 @@ AI-driven experience.
 
 ### 🔥 Live System Status
 - **RAGE:MP Server**: ✅ Real GTA V multiplayer integration ready
-- **Backend Server**: ✅ Running on http://localhost:22005 (Healthy)
-- **Frontend App**: ✅ Running on http://localhost:3000 (Responsive)
+- **Backend Server**: ✅ Running on http://localhost:4828 (Healthy)
+- **Frontend App**: ✅ Running on http://localhost:4829 (Responsive)
 - **Database**: ✅ PostgreSQL connected and operational  
 - **API Endpoints**: ✅ All endpoints responding < 50ms average
 - **Real-time Stats**: ✅ Live data updates with WebSocket
@@ -144,7 +144,7 @@ npm run dev
 npm run test:server
 ```
 
-**Server will be running at:** [http://localhost:22005](http://localhost:22005)
+**Server will be running at:** [http://localhost:4828](http://localhost:4828)
 
 ## ✨ Features
 
@@ -238,7 +238,7 @@ GRANT ALL PRIVILEGES ON DATABASE gang_gpt_db TO gang_gpt_user;
 1. Update your `.env` file with the database connection string:
 
 ```bash
-DATABASE_URL="postgresql://gang_gpt_user:your_password@localhost:5432/gang_gpt_db"
+DATABASE_URL="postgresql://gang_gpt_user:your_password@localhost:4831/gang_gpt_db"
 ```
 
 1. Run the database migrations:
@@ -542,7 +542,7 @@ cp .env.example .env
 pnpm db:push
 
 # Start development servers
-pnpm dev          # Backend API (localhost:22005)
+pnpm dev          # Backend API (localhost:4828)
 cd web && pnpm dev # Frontend (localhost:3000)
 ```
 

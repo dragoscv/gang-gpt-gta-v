@@ -190,7 +190,7 @@ app.use('*', (req, res) => {
 });
 
 // Start server
-const PORT = config.server.port || 3001;
+const PORT = config.server.port || 4828;
 
 app.listen(PORT, () => {
   logger.info(`tRPC server running on port ${PORT}`, {
