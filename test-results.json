@@ -128,52 +128,61 @@
   },
   "suites": [
     {
-      "title": "simple.test.ts",
-      "file": "simple.test.ts",
+      "title": "full-stack.test.ts",
+      "file": "full-stack.test.ts",
       "column": 0,
       "line": 0,
-      "specs": [
+      "specs": [],
+      "suites": [
         {
-          "title": "simple test",
-          "ok": true,
-          "tags": [],
-          "tests": [
+          "title": "GangGPT Full Stack E2E Tests",
+          "file": "full-stack.test.ts",
+          "line": 3,
+          "column": 6,
+          "specs": [
             {
-              "timeout": 30000,
-              "annotations": [],
-              "expectedStatus": "passed",
-              "projectId": "chromium",
-              "projectName": "chromium",
-              "results": [
+              "title": "Homepage should load and display main sections",
+              "ok": true,
+              "tags": [],
+              "tests": [
                 {
-                  "workerIndex": 0,
-                  "parallelIndex": 0,
-                  "status": "passed",
-                  "duration": 5,
-                  "errors": [],
-                  "stdout": [],
-                  "stderr": [],
-                  "retry": 0,
-                  "startTime": "2025-06-08T12:21:39.363Z",
+                  "timeout": 30000,
                   "annotations": [],
-                  "attachments": []
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 7941,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-06-08T12:22:23.226Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
                 }
               ],
-              "status": "expected"
+              "id": "60d57e538b489fa7ac60-c0d31d51e96617c37456",
+              "file": "full-stack.test.ts",
+              "line": 4,
+              "column": 7
             }
-          ],
-          "id": "f0ed5b996187e85f8787-ec49eddb6c4ddf4438c8",
-          "file": "simple.test.ts",
-          "line": 3,
-          "column": 5
+          ]
         }
       ]
     }
   ],
   "errors": [],
   "stats": {
-    "startTime": "2025-06-08T12:21:38.512Z",
-    "duration": 894.166,
+    "startTime": "2025-06-08T12:22:22.585Z",
+    "duration": 9131.445,
     "expected": 1,
     "skipped": 0,
     "unexpected": 0,
