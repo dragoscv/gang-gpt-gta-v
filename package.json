@@ -18,6 +18,8 @@
   "scripts": {
     "dev": "tsx src/server.ts",
     "dev:api": "tsx watch src/server.ts",
+    "dev:all": "pwsh -ExecutionPolicy Bypass -File scripts/start-dev-all.ps1",
+    "dev:status": "pwsh -ExecutionPolicy Bypass -File scripts/check-services.ps1",
     "build": "tsc && tsc-alias",
     "start": "node dist/server.js",
     "test": "vitest run",
@@ -101,6 +103,7 @@
     "playwright": "^1.40.1",
     "prettier": "^3.1.0",
     "prisma": "^5.7.1",
+    "redis-server": "^1.2.2",
     "supertest": "^7.1.1",
     "tsc-alias": "^1.8.8",
     "tsx": "^4.6.0",

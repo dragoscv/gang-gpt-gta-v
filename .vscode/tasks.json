@@ -17,6 +17,134 @@
 			"options": {
 				"cwd": "${workspaceFolder}"
 			}
+		},
+		{
+			"label": "GangGPT: Start All Services",
+			"type": "shell",
+			"command": "pwsh",
+			"args": [
+				"-ExecutionPolicy", "Bypass",
+				"-File", "scripts/start-dev-all.ps1"
+			],
+			"group": "build",
+			"isBackground": true,
+			"presentation": {
+				"echo": true,
+				"reveal": "always",
+				"focus": false,
+				"panel": "new",
+				"showReuseMessage": true,
+				"clear": false
+			},
+			"options": {
+				"cwd": "${workspaceFolder}"
+			}
+		},
+		{
+			"label": "GangGPT: Start Backend Only",
+			"type": "shell",
+			"command": "pnpm",
+			"args": [
+				"run",
+				"dev"
+			],
+			"group": "build",
+			"isBackground": true,
+			"problemMatcher": [
+				"$tsc"
+			],
+			"options": {
+				"cwd": "${workspaceFolder}"
+			}
+		},
+		{
+			"label": "GangGPT: Start Frontend Only",
+			"type": "shell",
+			"command": "pnpm",
+			"args": [
+				"run",
+				"dev"
+			],
+			"group": "build",
+			"isBackground": true,
+			"options": {
+				"cwd": "${workspaceFolder}/web"
+			}
+		},
+		{
+			"label": "GangGPT: Start Redis",
+			"type": "shell",
+			"command": "redis-windows/redis-server.exe",
+			"args": [
+				"redis-windows/ganggpt-redis.conf"
+			],
+			"group": "build",
+			"isBackground": true,
+			"options": {
+				"cwd": "${workspaceFolder}"
+			}
+		},
+		{
+			"label": "GangGPT: Build Project",
+			"type": "shell",
+			"command": "pnpm",
+			"args": [
+				"build"
+			],
+			"group": "build",
+			"problemMatcher": [
+				"$tsc"
+			],
+			"options": {
+				"cwd": "${workspaceFolder}"
+			}
+		},
+		{
+			"label": "GangGPT: Run Tests",
+			"type": "shell",
+			"command": "pnpm",
+			"args": [
+				"test"
+			],
+			"group": "test",
+			"options": {
+				"cwd": "${workspaceFolder}"
+			}
+		},
+		{
+			"label": "GangGPT: Start RAGE:MP Server",
+			"type": "shell",
+			"command": "ragemp-server.exe",
+			"group": "build",
+			"isBackground": true,
+			"presentation": {
+				"echo": true,
+				"reveal": "always",
+				"focus": false,
+				"panel": "new"
+			},
+			"options": {
+				"cwd": "${workspaceFolder}/ragemp-server"
+			}
+		},
+		{
+			"label": "GangGPT: Check Services Status",
+			"type": "shell",
+			"command": "pwsh",
+			"args": [
+				"-ExecutionPolicy", "Bypass",
+				"-File", "scripts/check-services.ps1"
+			],
+			"group": "build",
+			"presentation": {
+				"echo": true,
+				"reveal": "always",
+				"focus": true,
+				"panel": "new"
+			},
+			"options": {
+				"cwd": "${workspaceFolder}"
+			}
 		}
 	]
 }

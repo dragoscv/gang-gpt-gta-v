@@ -4,6 +4,7 @@
  */
 
 import { Router } from 'express';
+import gameRoutes from './game.routes';
 
 const router: Router = Router();
 
@@ -85,5 +86,8 @@ router.get('/ping', (_req, res) => {
     message: 'REST API is operational',
   });
 });
+
+// Game integration routes for RAGE:MP
+router.use('/game', gameRoutes);
 
 export { router as restRouter };
