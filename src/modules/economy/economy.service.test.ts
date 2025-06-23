@@ -473,7 +473,7 @@ describe('EconomyService', () => {
   describe('cleanup', () => {
     it('should cleanup resources successfully', async () => {
       // Mock price update interval
-      (economyService as any).priceUpdateInterval = setInterval(() => { }, 1000);
+      (economyService as any).priceUpdateInterval = setInterval(() => {}, 1000);
 
       await economyService.cleanup();
 

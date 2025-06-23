@@ -102,7 +102,7 @@ const mockApp = {
   set: vi.fn(),
 };
 
-vi.mock('express', async (importOriginal) => {
+vi.mock('express', async importOriginal => {
   const actual = await importOriginal<typeof import('express')>();
 
   const mockExpress: any = vi.fn(() => mockApp);

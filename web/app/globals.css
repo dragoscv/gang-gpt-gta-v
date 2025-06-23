@@ -112,4 +112,118 @@
   .glass-effect {
     @apply backdrop-blur-md bg-white/10 border border-white/20;
   }
+
+  /* Gaming-specific animations and effects */
+  .gaming-button {
+    @apply relative overflow-hidden;
+    background: linear-gradient(45deg, #8b5cf6, #ec4899, #ef4444);
+    background-size: 200% 200%;
+    animation: gradient-shift 3s ease infinite;
+  }
+
+  .gaming-button::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+    transition: left 0.5s;
+  }
+
+  .gaming-button:hover::before {
+    left: 100%;
+  }
+
+  /* Neon glow effects */
+  .neon-purple {
+    box-shadow:
+      0 0 10px #8b5cf6,
+      0 0 20px #8b5cf6,
+      0 0 40px #8b5cf6,
+      inset 0 0 10px rgba(139, 92, 246, 0.1);
+  }
+
+  .neon-pink {
+    box-shadow:
+      0 0 10px #ec4899,
+      0 0 20px #ec4899,
+      0 0 40px #ec4899,
+      inset 0 0 10px rgba(236, 72, 153, 0.1);
+  }
+
+  .neon-red {
+    box-shadow:
+      0 0 10px #ef4444,
+      0 0 20px #ef4444,
+      0 0 40px #ef4444,
+      inset 0 0 10px rgba(239, 68, 68, 0.1);
+  }
+
+  /* Gaming particle effects */
+  .particle-container {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .particle {
+    position: absolute;
+    width: 2px;
+    height: 2px;
+    background: #fff;
+    border-radius: 50%;
+    animation: particle-float 2s linear infinite;
+  }
+
+  @keyframes particle-float {
+    0% {
+      transform: translateY(100vh) scale(0);
+      opacity: 0;
+    }
+
+    10% {
+      opacity: 1;
+    }
+
+    90% {
+      opacity: 1;
+    }
+
+    100% {
+      transform: translateY(-10vh) scale(1);
+      opacity: 0;
+    }
+  }
+
+  @keyframes gradient-shift {
+
+    0%,
+    100% {
+      background-position: 0% 50%;
+    }
+
+    50% {
+      background-position: 100% 50%;
+    }
+  }
+
+  /* HUD-style borders */
+  .hud-border {
+    position: relative;
+    border: 2px solid transparent;
+    background: linear-gradient(45deg, #8b5cf6, #ec4899) border-box;
+    border-radius: 8px;
+  }
+
+  .hud-border::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    padding: 2px;
+    background: linear-gradient(45deg, #8b5cf6, #ec4899);
+    border-radius: inherit;
+    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    mask-composite: xor;
+  }
 }

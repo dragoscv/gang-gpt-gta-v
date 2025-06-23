@@ -455,162 +455,157 @@ npx playwright test e2e/statistics.e2e.test.ts
 
 See our [Testing Strategy Documentation](./docs/TESTING.md) for detailed information on writing tests, best practices, and troubleshooting.
 
-## 🚢 Development Workflow
+## 🔄 Development Watch Mode
 
-- **Git Flow**: Feature branches with conventional commits
-- **Code Quality**: ESLint and Prettier enforcement
-- **Automated Testing**: CI/CD pipeline with Jest and Playwright
-- **Documentation**: JSDoc with comprehensive examples
-- **Reviews**: Mandatory PR reviews for main branches
+GangGPT features a robust **watch mode** for development with automatic restart and live reloading across all services:
 
-## 🌐 Community & Support
-
-- [📣 Discord Server](https://discord.gg/ganggpt)
-- [💬 GitHub Discussions](https://github.com/yourusername/gang-gpt-gta-v/discussions)
-- [📝 Development Blog](https://ganggpt.dev/blog)
-- [📧 Support Email](mailto:support@ganggpt.dev)
-- [🐦 Twitter](https://twitter.com/GangGPTDev)
-
-## 📚 Additional Documentation
-
-- [🧠 AI Systems](./docs/AI.md)
-- [🏗️ Infrastructure](./docs/INFRASTRUCTURE.md)
-- [⚔️ Factions](./docs/FACTIONS.md)
-- [📖 Lore](./docs/LORE.md)
-- [� Testing Strategy](./docs/TESTING.md)
-- [�🤖 Copilot Instructions](./docs/COPILOT.md)
-- [💻 API Reference](./docs/API.md)
-- [🔧 Contributing Guide](./docs/CONTRIBUTING.md)
-
-## 📄 License
-
-MIT License - see [LICENSE](./LICENSE) for details.
-
-## 🤝 Contributing
-
-We welcome contributions to the GangGPT project! Please read our
-[Contributing Guide](./docs/CONTRIBUTING.md) before submitting pull requests.
-
-### Reporting Bugs
-
-If you find a bug, please open an issue on our
-[GitHub Issues](https://github.com/yourusername/gang-gpt-gta-v/issues) page
-with:
-
-- A clear, descriptive title
-- A detailed description of the bug
-- Steps to reproduce the issue
-- Expected behavior
-- Screenshots (if applicable)
-- Environment information
-
-### Feature Requests
-
-Feature requests are welcome! Please provide:
-
-- A clear description of the feature
-- Why it would be valuable to the project
-- Any implementation ideas you may have
-
-### Development Process
-
-1. Fork the repository
-1. Create a feature branch (`git checkout -b feature/amazing-feature`)
-1. Commit your changes (`git commit -m 'feat: add amazing feature'`)
-1. Push to the branch (`git push origin feature/amazing-feature`)
-1. Open a Pull Request
-
-## 🚀 Quick Start
-
-Get GangGPT up and running in just a few simple steps:
-
-### Development Setup
+### ⚡ Quick Start with Watch Mode
 
 ```bash
-# Clone the repository
-git clone https://github.com/yourusername/gang-gpt-gta-v.git
-cd gang-gpt-gta-v
+# Start all services with watch mode (recommended for development)
+pnpm run dev:watch
 
-# Install dependencies
-pnpm install
-
-# Set up environment variables
-cp .env.example .env
-# Edit .env with your Azure OpenAI API Key and other configuration
-
-# Setup the database
-pnpm db:push
-
-# Start development servers
-pnpm dev          # Backend API (localhost:4828)
-cd web && pnpm dev # Frontend (localhost:3000)
+# Or use VS Code tasks (Ctrl+Shift+P → "Tasks: Run Task")
+# Select "GangGPT: Start Watch Mode (All Services)"
 ```
 
-Visit http://localhost:3000 in your browser to see the application in action!
+### 🎯 Individual Service Watch Mode
 
-### Production Deployment
-
-For production deployment, use Docker Compose:
+For focused development on specific services:
 
 ```bash
-# Configure production environment
-cp .env.production .env
-# Edit .env with your production values (API keys, secrets, etc.)
+# Watch backend only (API + database)
+pnpm run dev:watch:backend
 
-# Build and start production services
-docker-compose -f docker-compose.prod.yml up -d
+# Watch frontend only (Next.js with hot reload)
+pnpm run dev:watch:frontend
 
-# Monitor logs
-docker-compose -f docker-compose.prod.yml logs -f app
+# Watch RAGE:MP server only
+pnpm run dev:watch:ragemp
+
+# Watch all services (same as dev:watch)
+pnpm run dev:watch:all
 ```
 
-Access your monitoring dashboard at http://localhost:3005 (Grafana).
+### 🛠️ Watch Mode Features
 
-For a detailed production guide, see [Production Deployment Guide](docs/PRODUCTION_DEPLOYMENT.md).
+- **🔄 Live Reloading**: Automatic restart on file changes
+- **📁 Smart File Watching**: Monitors relevant file types (.ts, .js, .json, .jsx, .tsx)
+- **⚡ Fast Restart**: Optimized restart times with caching
+- **🎯 Selective Watching**: Per-service watchers for targeted development
+- **🔍 Debug Output**: Detailed logging with timestamps and service identification
+- **⚙️ Error Recovery**: Automatic restart on crashes with retry logic
+- **📊 Health Monitoring**: Built-in service health checks
 
-## 🔐 Authentication System
+### 📁 Watched Directories
 
-The authentication system provides a complete user management solution including:
+| Service | Watched Path | File Types | Features |
+|---------|-------------|------------|----------|
+| **Backend** | `src/**/*` | `.ts`, `.js`, `.json` | tsx watch + custom watcher |
+| **Frontend** | `web/**/*` | All files | Next.js built-in hot reload |
+| **RAGE:MP** | `ragemp-server/packages/**/*` | `.js` | Custom file watcher |
 
-- **Registration**: Create new accounts with username, email, and password
-- **Login**: Secure authentication using JWT tokens
-- **Password Reset**: Complete flow with email verification
-- **Session Management**: Track and manage user sessions
-- **Profile Updates**: Allow users to update their profile information
-- **Security**: Bcrypt hashing, JWT token rotation, and protection against common attacks
+### 🎮 VS Code Integration
 
-## 🤖 AI Integration
+Watch mode is fully integrated with VS Code tasks for easy access:
 
-GangGPT leverages Azure OpenAI GPT-4o-mini to create intelligent experiences:
+1. **Open Command Palette**: `Ctrl+Shift+P` (Windows/Linux) or `Cmd+Shift+P` (Mac)
+2. **Type**: "Tasks: Run Task"
+3. **Select** from available options:
+   - `GangGPT: Start Watch Mode (All Services)` - Complete development environment
+   - `GangGPT: Watch Backend Only` - API and database development
+   - `GangGPT: Watch Frontend Only` - UI development with hot reload
+   - `GangGPT: Watch RAGE:MP Only` - Game server development
 
-- **NPC Companions**: AI-driven companions with memory and personality
-- **Dynamic Missions**: Procedurally generated missions tailored to player preferences
-- **Faction AI**: Intelligent faction behavior creating dynamic power struggles
-- **Environmental Storytelling**: AI-generated world events and narratives
-- **Smart Interactions**: Realistic conversations with AI-powered characters
+### ⚙️ Watch Mode Configuration
 
-## 📊 Dashboard & Statistics
-
-Access real-time statistics and insights about the game world:
-
-- **Player Statistics**: Track online players, activity levels, and popular areas
-- **Economic Data**: Monitor in-game economy, inflation rates, and market trends
-- **Faction Intelligence**: View territory control, faction relationships, and power dynamics
-- **Server Performance**: Monitor server health, response times, and resource usage
-- **Admin Tools**: Manage users, resolve issues, and configure game parameters
-
-## 🚀 Deployment
-
-Follow our [Production Deployment Checklist](./PRODUCTION_DEPLOYMENT_CHECKLIST.md) for a smooth launch:
+The watch mode can be customized with command-line parameters:
 
 ```bash
-# Build for production
-pnpm build        # Backend
-cd web && pnpm build # Frontend
+# Skip initial build (faster startup)
+pnpm run dev:watch -- -SkipBuild
 
-# Deploy with Docker
-docker-compose -f docker-compose.prod.yml up -d
+# Enable verbose logging
+pnpm run dev:watch -- -Verbose
+
+# Skip RAGE:MP server (web-only development)
+pnpm run dev:watch -- -NoRageMP
+
+# Combine multiple options
+pnpm run dev:watch -- -SkipBuild -Verbose -NoRageMP
 ```
+
+### 🔧 Advanced Features
+
+#### Smart Debouncing
+- **Prevents restart spam** during rapid file changes
+- **Per-file tracking** to avoid duplicate events
+- **Configurable delay** (default: 1000ms)
+
+#### Error Recovery
+- **Automatic restart** on service crashes
+- **Retry logic** with exponential backoff
+- **Health monitoring** with automatic recovery
+
+#### Performance Optimization
+- **Exclude patterns** for node_modules, .git, logs, etc.
+- **File type filtering** to watch only relevant files
+- **Efficient file system monitoring** with minimal resource usage
+
+### 🐛 Troubleshooting Watch Mode
+
+#### Common Issues
+
+**Watch mode not starting:**
+```bash
+# Check prerequisites
+node --version  # Should be 18+
+pnpm --version  # Should be 8+
+
+# Verify project structure
+ls package.json  # Should exist in project root
+```
+
+**Services not restarting:**
+```bash
+# Check file watcher permissions
+# On Windows: Run PowerShell as Administrator
+# On Linux/Mac: Check file system permissions
+```
+
+**Port conflicts:**
+```bash
+# Check if ports are already in use
+netstat -an | findstr "4828"  # Backend port
+netstat -an | findstr "4829"  # Frontend port
+netstat -an | findstr "22005" # RAGE:MP port
+```
+
+#### Performance Tuning
+
+For large projects, you may want to adjust the debounce timing:
+
+```powershell
+# Edit scripts/start-dev-watch.ps1
+# Change line: $debounceMs = 1000  # to desired value in milliseconds
+```
+
+### 📋 Development Workflow
+
+1. **Start watch mode**: `pnpm run dev:watch`
+2. **Edit code**: Files are automatically watched
+3. **Save changes**: Services restart automatically
+4. **Check logs**: Monitor console output for status
+5. **Test changes**: Visit http://localhost:4829 for frontend
+6. **Stop services**: `Ctrl+C` in terminal
+
+### 🎯 Best Practices
+
+- **Use watch mode for active development** - Saves time with automatic restarts
+- **Use individual watchers** when working on specific services
+- **Monitor console output** for restart notifications and errors
+- **Use VS Code tasks** for integrated development experience
+- **Combine with debugger** for enhanced development workflow
 
 ---
 

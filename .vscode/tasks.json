@@ -114,7 +114,7 @@
 		{
 			"label": "GangGPT: Start RAGE:MP Server",
 			"type": "shell",
-			"command": "ragemp-server.exe",
+			"command": "./ragemp-server.exe",
 			"group": "build",
 			"isBackground": true,
 			"presentation": {
@@ -126,6 +126,95 @@
 			"options": {
 				"cwd": "${workspaceFolder}/ragemp-server"
 			}
+		},
+		{
+			"label": "GangGPT: Start Watch Mode (All Services)",
+			"type": "shell",
+			"command": "pwsh",
+			"args": [
+				"-ExecutionPolicy", "Bypass",
+				"-File", "scripts/start-dev-watch.ps1"
+			],
+			"group": "build",
+			"isBackground": true,
+			"presentation": {
+				"echo": true,
+				"reveal": "always",
+				"focus": false,
+				"panel": "new",
+				"showReuseMessage": true,
+				"clear": true
+			},
+			"options": {
+				"cwd": "${workspaceFolder}"
+			},
+			"problemMatcher": []
+		},
+		{
+			"label": "GangGPT: Watch Backend Only",
+			"type": "shell",
+			"command": "pwsh",
+			"args": [
+				"-ExecutionPolicy", "Bypass",
+				"-File", "scripts/start-service-watch.ps1",
+				"-Service", "backend"
+			],
+			"group": "build",
+			"isBackground": true,
+			"presentation": {
+				"echo": true,
+				"reveal": "always",
+				"focus": false,
+				"panel": "new"
+			},
+			"options": {
+				"cwd": "${workspaceFolder}"
+			},
+			"problemMatcher": []
+		},
+		{
+			"label": "GangGPT: Watch Frontend Only",
+			"type": "shell",
+			"command": "pwsh",
+			"args": [
+				"-ExecutionPolicy", "Bypass",
+				"-File", "scripts/start-service-watch.ps1",
+				"-Service", "frontend"
+			],
+			"group": "build",
+			"isBackground": true,
+			"presentation": {
+				"echo": true,
+				"reveal": "always",
+				"focus": false,
+				"panel": "new"
+			},
+			"options": {
+				"cwd": "${workspaceFolder}"
+			},
+			"problemMatcher": []
+		},
+		{
+			"label": "GangGPT: Watch RAGE:MP Only",
+			"type": "shell",
+			"command": "pwsh",
+			"args": [
+				"-ExecutionPolicy", "Bypass",
+				"-File", "scripts/start-service-watch.ps1",
+				"-Service", "ragemp"
+			],
+			"group": "build",
+			"isBackground": true,
+			"presentation": {
+				"echo": true,
+				"reveal": "always",
+				"focus": false,
+				"panel": "new"
+			},
+			"options": {
+				"cwd": "${workspaceFolder}"
+			},
+			"problemMatcher": []
 		},
 		{
 			"label": "GangGPT: Check Services Status",
