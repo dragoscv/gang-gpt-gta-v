@@ -1,0 +1,19 @@
+{
+    "maxplayers": 2,
+    "port": 22005,
+    "name": "Test Server",
+    "announce": false,
+    "gamemode": "freeroam",
+    "disallow-multiple-connections-per-ip": false,
+    "limit-time-of-connections-per-ip": 0,
+    "url": "",
+    "language": "en",
+    "sync-rate": 40,
+    "resource-scan-thread-limit": 0,
+    "max-ping": 0,
+    "min-fps": 0,
+    "max-packet-loss": 0.0,
+    "allow-cef-debugging": false,
+    "enable-nodejs": false,
+    "csharp": "disabled"
+}

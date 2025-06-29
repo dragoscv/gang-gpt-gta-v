@@ -1,13 +1,13 @@
 /**
- * GangGPT RAGE:MP Package Entry Point (Simplified Version)
- * Based on working DiamondRP implementation
+ * GangGPT RAGE:MP Package Entry Point
+ * This package integrates GangGPT AI system with RAGE:MP server
  */
 
-console.log('� Loading GangGPT RAGE:MP Package (Simple Mode)...');
+console.log('📦 Loading GangGPT RAGE:MP Package...');
 
 try {
     // Load the RAGE:MP specific entry point
-    require('./ragemp-entry-simple.js');
+    require('./ragemp-entry.js');
 
 } catch (error) {
     console.error('❌ Failed to load GangGPT:', error);

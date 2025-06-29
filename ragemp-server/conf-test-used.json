@@ -1,0 +1,10 @@
+{
+  "port": 22006,
+  "allow-cef-debugging": true,
+  "packages": [],
+  "announce": false,
+  "name": "GangGPT Test Server",
+  "maxplayers": 100,
+  "stream-distance": 300.0,
+  "gamemode": "freeroam"
+}

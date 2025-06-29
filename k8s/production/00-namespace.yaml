@@ -1,0 +1,64 @@
+# GangGPT Kubernetes Production Namespace
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: ganggpt-production
+  labels:
+    name: ganggpt-production
+    environment: production
+    app: ganggpt
+---
+# Resource Quotas for Production Namespace
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: ganggpt-resource-quota
+  namespace: ganggpt-production
+spec:
+  hard:
+    requests.cpu: "4"
+    requests.memory: 8Gi
+    limits.cpu: "8"
+    limits.memory: 16Gi
+    persistentvolumeclaims: "10"
+    services: "10"
+    secrets: "20"
+    configmaps: "20"
+---
+# Network Policy for Production Security
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: ganggpt-network-policy
+  namespace: ganggpt-production
+spec:
+  podSelector: {}
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress:
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          name: ganggpt-production
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          name: ingress-nginx
+  egress:
+  - to:
+    - namespaceSelector:
+        matchLabels:
+          name: ganggpt-production
+  - to: []
+    ports:
+    - protocol: TCP
+      port: 53
+    - protocol: UDP
+      port: 53
+  - to: []
+    ports:
+    - protocol: TCP
+      port: 443
+    - protocol: TCP
+      port: 80

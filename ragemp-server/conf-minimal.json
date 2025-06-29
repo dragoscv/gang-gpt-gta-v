@@ -1,0 +1,7 @@
+{
+    "maxplayers": 10,
+    "port": 22005,
+    "name": "GangGPT Minimal Test",
+    "announce": false,
+    "gamemode": "Freeroam"
+}

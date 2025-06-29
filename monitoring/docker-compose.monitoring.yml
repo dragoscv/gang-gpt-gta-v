@@ -1,0 +1,407 @@
+# GangGPT Production Monitoring Stack
+# Comprehensive observability with Prometheus, Grafana, and Loki
+
+version: '3.8'
+
+networks:
+  monitoring:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.25.0.0/16
+
+volumes:
+  prometheus_data:
+    driver: local
+  grafana_data:
+    driver: local
+  loki_data:
+    driver: local
+  alertmanager_data:
+    driver: local
+
+services:
+  # ========================================
+  # Metrics Collection
+  # ========================================
+
+  # Prometheus - Metrics Database
+  prometheus:
+    image: prom/prometheus:v2.48.0
+    container_name: ganggpt-prometheus
+    restart: unless-stopped
+    ports:
+      - "9090:9090"
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--storage.tsdb.retention.time=30d'
+      - '--storage.tsdb.retention.size=50GB'
+      - '--web.enable-lifecycle'
+      - '--web.enable-admin-api'
+      - '--web.external-url=http://prometheus.ganggpt.local'
+    volumes:
+      - ./config/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./config/alerts/:/etc/prometheus/alerts/:ro
+      - prometheus_data:/prometheus
+    networks:
+      - monitoring
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:9090/-/healthy"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.prometheus.rule=Host(`prometheus.ganggpt.local`)"
+      - "traefik.http.services.prometheus.loadbalancer.server.port=9090"
+
+  # AlertManager - Alert Management
+  alertmanager:
+    image: prom/alertmanager:v0.26.0
+    container_name: ganggpt-alertmanager
+    restart: unless-stopped
+    ports:
+      - "9093:9093"
+    volumes:
+      - ./config/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
+      - alertmanager_data:/alertmanager
+    command:
+      - '--config.file=/etc/alertmanager/alertmanager.yml'
+      - '--storage.path=/alertmanager'
+      - '--web.external-url=http://alertmanager.ganggpt.local'
+      - '--web.route-prefix=/'
+    networks:
+      - monitoring
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:9093/-/healthy"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Node Exporter - System Metrics
+  node-exporter:
+    image: prom/node-exporter:v1.7.0
+    container_name: ganggpt-node-exporter
+    restart: unless-stopped
+    ports:
+      - "9100:9100"
+    command:
+      - '--path.procfs=/host/proc'
+      - '--path.rootfs=/rootfs'
+      - '--path.sysfs=/host/sys'
+      - '--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)'
+      - '--collector.systemd'
+      - '--collector.processes'
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+    networks:
+      - monitoring
+    pid: host
+
+  # cAdvisor - Container Metrics
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:v0.48.1
+    container_name: ganggpt-cadvisor
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:ro
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+      - /dev/disk/:/dev/disk:ro
+    devices:
+      - /dev/kmsg
+    privileged: true
+    networks:
+      - monitoring
+    command:
+      - '--housekeeping_interval=30s'
+      - '--max_housekeeping_interval=35s'
+      - '--event_storage_event_limit=default=0'
+      - '--event_storage_age_limit=default=0'
+      - '--disable_metrics=disk,tcp,udp,percpu,sched,process'
+      - '--docker_only'
+
+  # Postgres Exporter - Database Metrics
+  postgres-exporter:
+    image: prometheuscommunity/postgres-exporter:v0.15.0
+    container_name: ganggpt-postgres-exporter
+    restart: unless-stopped
+    ports:
+      - "9187:9187"
+    environment:
+      DATA_SOURCE_NAME: "postgresql://ganggpt_monitor:monitor_password@ganggpt-postgres:5432/ganggpt_prod?sslmode=disable"
+      PG_EXPORTER_EXTEND_QUERY_PATH: "/etc/postgres_exporter/queries.yaml"
+    volumes:
+      - ./config/postgres-queries.yaml:/etc/postgres_exporter/queries.yaml:ro
+    networks:
+      - monitoring
+    depends_on:
+      - prometheus
+
+  # Redis Exporter - Cache Metrics
+  redis-exporter:
+    image: oliver006/redis_exporter:v1.55.0
+    container_name: ganggpt-redis-exporter
+    restart: unless-stopped
+    ports:
+      - "9121:9121"
+    environment:
+      REDIS_ADDR: "redis://ganggpt-redis:6379"
+      REDIS_PASSWORD: "${REDIS_PASSWORD}"
+    networks:
+      - monitoring
+    depends_on:
+      - prometheus
+
+  # ========================================
+  # Visualization
+  # ========================================
+
+  # Grafana - Metrics Visualization
+  grafana:
+    image: grafana/grafana:10.2.0
+    container_name: ganggpt-grafana
+    restart: unless-stopped
+    ports:
+      - "3001:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD}
+      - GF_USERS_ALLOW_SIGN_UP=false
+      - GF_SECURITY_SECRET_KEY=${GRAFANA_SECRET_KEY}
+      - GF_ANALYTICS_REPORTING_ENABLED=false
+      - GF_ANALYTICS_CHECK_FOR_UPDATES=false
+      - GF_INSTALL_PLUGINS=grafana-piechart-panel,grafana-worldmap-panel,grafana-clock-panel
+      - GF_FEATURE_TOGGLES_ENABLE=publicDashboards
+      - GF_DATABASE_TYPE=postgres
+      - GF_DATABASE_HOST=ganggpt-postgres:5432
+      - GF_DATABASE_NAME=grafana
+      - GF_DATABASE_USER=grafana
+      - GF_DATABASE_PASSWORD=${GRAFANA_DB_PASSWORD}
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./config/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./config/grafana/dashboards:/var/lib/grafana/dashboards:ro
+    networks:
+      - monitoring
+    depends_on:
+      - prometheus
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:3000/api/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.grafana.rule=Host(`grafana.ganggpt.local`)"
+      - "traefik.http.services.grafana.loadbalancer.server.port=3000"
+
+  # ========================================
+  # Log Management
+  # ========================================
+
+  # Loki - Log Aggregation
+  loki:
+    image: grafana/loki:2.9.0
+    container_name: ganggpt-loki
+    restart: unless-stopped
+    ports:
+      - "3100:3100"
+    command: -config.file=/etc/loki/local-config.yaml
+    volumes:
+      - ./config/loki.yml:/etc/loki/local-config.yaml:ro
+      - loki_data:/loki
+    networks:
+      - monitoring
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:3100/ready || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Promtail - Log Collection
+  promtail:
+    image: grafana/promtail:2.9.0
+    container_name: ganggpt-promtail
+    restart: unless-stopped
+    volumes:
+      - ./config/promtail.yml:/etc/promtail/config.yml:ro
+      - /var/log:/var/log:ro
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    command: -config.file=/etc/promtail/config.yml
+    networks:
+      - monitoring
+    depends_on:
+      - loki
+
+  # ========================================
+  # Application Performance Monitoring
+  # ========================================
+
+  # Jaeger - Distributed Tracing
+  jaeger:
+    image: jaegertracing/all-in-one:1.50
+    container_name: ganggpt-jaeger
+    restart: unless-stopped
+    ports:
+      - "16686:16686"
+      - "14268:14268"
+      - "14250:14250"
+    environment:
+      - COLLECTOR_OTLP_ENABLED=true
+      - SPAN_STORAGE_TYPE=elasticsearch
+      - ES_SERVER_URLS=http://elasticsearch:9200
+    networks:
+      - monitoring
+    depends_on:
+      - elasticsearch
+
+  # Elasticsearch - Trace Storage
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.11.0
+    container_name: ganggpt-elasticsearch
+    restart: unless-stopped
+    ports:
+      - "9200:9200"
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - "ES_JAVA_OPTS=-Xms1g -Xmx1g"
+    volumes:
+      - ./data/elasticsearch:/usr/share/elasticsearch/data
+    networks:
+      - monitoring
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:9200/_cluster/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ========================================
+  # Performance Testing
+  # ========================================
+
+  # K6 - Load Testing
+  k6:
+    image: grafana/k6:0.47.0
+    container_name: ganggpt-k6
+    restart: "no"
+    volumes:
+      - ./tests/performance:/scripts:ro
+      - ./reports:/reports
+    environment:
+      - K6_PROMETHEUS_RW_SERVER_URL=http://prometheus:9090/api/v1/write
+      - K6_PROMETHEUS_RW_TREND_AS_NATIVE_HISTOGRAM=true
+    networks:
+      - monitoring
+    profiles:
+      - testing
+
+  # ========================================
+  # Uptime Monitoring
+  # ========================================
+
+  # Uptime Kuma - Service Monitoring
+  uptime-kuma:
+    image: louislam/uptime-kuma:1.23.8
+    container_name: ganggpt-uptime-kuma
+    restart: unless-stopped
+    ports:
+      - "3002:3001"
+    volumes:
+      - ./data/uptime-kuma:/app/data
+    networks:
+      - monitoring
+    environment:
+      - UPTIME_KUMA_PORT=3001
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.uptime.rule=Host(`uptime.ganggpt.local`)"
+      - "traefik.http.services.uptime.loadbalancer.server.port=3001"
+
+  # ========================================
+  # Security Monitoring
+  # ========================================
+
+  # Falco - Runtime Security
+  falco:
+    image: falcosecurity/falco-no-driver:0.36.0
+    container_name: ganggpt-falco
+    restart: unless-stopped
+    privileged: true
+    volumes:
+      - /var/run/docker.sock:/host/var/run/docker.sock
+      - /dev:/host/dev
+      - /proc:/host/proc:ro
+      - /boot:/host/boot:ro
+      - /lib/modules:/host/lib/modules:ro
+      - /usr:/host/usr:ro
+      - /etc:/host/etc:ro
+      - ./config/falco.yaml:/etc/falco/falco.yaml:ro
+    networks:
+      - monitoring
+    command:
+      - /usr/bin/falco
+      - --cri
+      - /run/containerd/containerd.sock
+      - --k8s-api
+      - --k8s-api-cert
+      - /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+      - --k8s-api-token
+      - /var/run/secrets/kubernetes.io/serviceaccount/token
+
+  # ========================================
+  # Network Monitoring
+  # ========================================
+
+  # Blackbox Exporter - Endpoint Monitoring
+  blackbox-exporter:
+    image: prom/blackbox-exporter:v0.24.0
+    container_name: ganggpt-blackbox-exporter
+    restart: unless-stopped
+    ports:
+      - "9115:9115"
+    volumes:
+      - ./config/blackbox.yml:/etc/blackbox_exporter/config.yml:ro
+    networks:
+      - monitoring
+    command:
+      - '--config.file=/etc/blackbox_exporter/config.yml'
+
+  # ========================================
+  # Data Processing
+  # ========================================
+
+  # Vector - Log Processing
+  vector:
+    image: timberio/vector:0.34.0-alpine
+    container_name: ganggpt-vector
+    restart: unless-stopped
+    volumes:
+      - ./config/vector.toml:/etc/vector/vector.toml:ro
+      - /var/log:/var/log:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      - monitoring
+    depends_on:
+      - loki
+      - elasticsearch
+
+# ========================================
+# Health Checks
+# ========================================
+healthcheck:
+  test: ["CMD", "curl", "-f", "http://localhost:9090/-/healthy"]
+  interval: 30s
+  timeout: 10s
+  retries: 3
+  start_period: 60s

@@ -93,6 +93,12 @@ prisma/migrations/
 
 # Redis dumps
 dump.rdb
+appendonly.aof
+
+# Test artifacts
+test-results.json
+lint-output.txt
+*-test-results/
 
 # Monitoring
 grafana/data/
@@ -104,3 +110,24 @@ prometheus/data/
 *.temp
 *~$*
 .#*
+
+# Redundant documentation (prevent re-creation)
+FINAL_*.md
+PROJECT_COMPLETION_*.md
+LIVE_TESTING_*.md
+GAME_*_GUIDE.md
+*_CONNECTION_FIX*.md
+READY_TO_*.md
+QUICK_*.md
+*_COMPLETE.md
+
+# Server log files (use proper logging system instead)
+server-*.txt
+server-output.txt
+server-error.txt
+server-out.txt
+server-err.txt
+
+# Temporary files and archives
+*.zip
+*.tar.gz

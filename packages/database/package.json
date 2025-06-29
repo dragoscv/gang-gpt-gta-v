@@ -1,0 +1,38 @@
+{
+    "name": "@ganggpt/database",
+    "version": "2.0.0",
+    "description": "Database layer with Prisma ORM for GangGPT applications",
+    "private": true,
+    "main": "dist/index.js",
+    "types": "dist/index.d.ts",
+    "scripts": {
+        "build": "tsc",
+        "dev": "tsc --watch",
+        "generate": "prisma generate",
+        "push": "prisma db push",
+        "migrate": "prisma migrate dev",
+        "studio": "prisma studio",
+        "seed": "tsx prisma/seed.ts",
+        "reset": "prisma migrate reset --force",
+        "lint": "eslint src --ext .ts --fix",
+        "typecheck": "tsc --noEmit",
+        "clean": "rimraf dist"
+    },
+    "dependencies": {
+        "@ganggpt/shared": "workspace:*",
+        "@prisma/client": "^5.22.0",
+        "bcryptjs": "^2.4.3"
+    },
+    "devDependencies": {
+        "@ganggpt/eslint-config": "workspace:*",
+        "@types/bcryptjs": "^2.4.6",
+        "@types/node": "^22.9.4",
+        "prisma": "^5.22.0",
+        "tsx": "^4.6.0",
+        "typescript": "^5.7.2"
+    },
+    "engines": {
+        "node": ">=18.0.0",
+        "pnpm": ">=8.0.0"
+    }
+}

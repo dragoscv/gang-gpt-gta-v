@@ -1,0 +1,369 @@
+# Frontend Web Application Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ganggpt-web
+  namespace: ganggpt-production
+  labels:
+    app: ganggpt-web
+    component: frontend
+    environment: production
+    version: v2.0.0
+spec:
+  replicas: 3
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+      maxSurge: 2
+  selector:
+    matchLabels:
+      app: ganggpt-web
+      component: frontend
+  template:
+    metadata:
+      labels:
+        app: ganggpt-web
+        component: frontend
+        version: v2.0.0
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "3000"
+        prometheus.io/path: "/api/metrics"
+    spec:
+      serviceAccountName: ganggpt-web
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1001
+        fsGroup: 1001
+      initContainers:
+      - name: wait-for-backend
+        image: busybox:1.35
+        command: ['sh', '-c']
+        args:
+        - |
+          until nc -z ganggpt-backend 3001; do
+            echo "Waiting for Backend API...";
+            sleep 5;
+          done;
+          echo "Backend API is ready!"
+      containers:
+      - name: web
+        image: ganggpt/web:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 3000
+          name: http
+          protocol: TCP
+        envFrom:
+        - configMapRef:
+            name: ganggpt-config
+        - secretRef:
+            name: ganggpt-secrets
+        env:
+        - name: POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        - name: POD_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        - name: POD_IP
+          valueFrom:
+            fieldRef:
+              fieldPath: status.podIP
+        - name: NEXT_PUBLIC_BUILD_ID
+          value: "v2.0.0-production"
+        - name: NEXT_PUBLIC_DEPLOYMENT_ENV
+          value: "production"
+        volumeMounts:
+        - name: web-config
+          mountPath: /app/config
+          readOnly: true
+        - name: temp-storage
+          mountPath: /tmp
+        - name: next-cache
+          mountPath: /app/.next/cache
+        resources:
+          requests:
+            cpu: 200m
+            memory: 256Mi
+          limits:
+            cpu: 1000m
+            memory: 1Gi
+        livenessProbe:
+          httpGet:
+            path: /api/health
+            port: 3000
+            scheme: HTTP
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+          successThreshold: 1
+        readinessProbe:
+          httpGet:
+            path: /api/ready
+            port: 3000
+            scheme: HTTP
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 3
+          successThreshold: 1
+        startupProbe:
+          httpGet:
+            path: /api/health
+            port: 3000
+            scheme: HTTP
+          initialDelaySeconds: 15
+          periodSeconds: 10
+          timeoutSeconds: 3
+          failureThreshold: 30
+          successThreshold: 1
+        lifecycle:
+          preStop:
+            exec:
+              command: ["/bin/sh", "-c", "sleep 10"]
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          runAsNonRoot: true
+          runAsUser: 1001
+          capabilities:
+            drop:
+            - ALL
+      volumes:
+      - name: web-config
+        configMap:
+          name: ganggpt-web-config
+      - name: temp-storage
+        emptyDir:
+          sizeLimit: 500Mi
+      - name: next-cache
+        emptyDir:
+          sizeLimit: 2Gi
+      restartPolicy: Always
+      terminationGracePeriodSeconds: 30
+      dnsPolicy: ClusterFirst
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            podAffinityTerm:
+              labelSelector:
+                matchExpressions:
+                - key: app
+                  operator: In
+                  values:
+                  - ganggpt-web
+              topologyKey: kubernetes.io/hostname
+      tolerations:
+      - key: node.kubernetes.io/not-ready
+        operator: Exists
+        effect: NoExecute
+        tolerationSeconds: 300
+      - key: node.kubernetes.io/unreachable
+        operator: Exists
+        effect: NoExecute
+        tolerationSeconds: 300
+
+---
+# Web Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: ganggpt-web
+  namespace: ganggpt-production
+  labels:
+    app: ganggpt-web
+    component: frontend
+  annotations:
+    prometheus.io/scrape: "true"
+    prometheus.io/port: "3000"
+    prometheus.io/path: "/api/metrics"
+spec:
+  type: ClusterIP
+  ports:
+  - port: 3000
+    targetPort: 3000
+    protocol: TCP
+    name: http
+  selector:
+    app: ganggpt-web
+    component: frontend
+  sessionAffinity: None
+
+---
+# Web Service Account
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: ganggpt-web
+  namespace: ganggpt-production
+  labels:
+    app: ganggpt-web
+    component: frontend
+automountServiceAccountToken: false
+
+---
+# Web Horizontal Pod Autoscaler
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: ganggpt-web-hpa
+  namespace: ganggpt-production
+  labels:
+    app: ganggpt-web
+    component: frontend
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: ganggpt-web
+  minReplicas: 3
+  maxReplicas: 15
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 70
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: 80
+  behavior:
+    scaleDown:
+      stabilizationWindowSeconds: 300
+      policies:
+      - type: Percent
+        value: 10
+        periodSeconds: 60
+    scaleUp:
+      stabilizationWindowSeconds: 60
+      policies:
+      - type: Percent
+        value: 100
+        periodSeconds: 60
+      - type: Pods
+        value: 3
+        periodSeconds: 60
+
+---
+# Web Pod Disruption Budget
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: ganggpt-web-pdb
+  namespace: ganggpt-production
+  labels:
+    app: ganggpt-web
+    component: frontend
+spec:
+  minAvailable: 2
+  selector:
+    matchLabels:
+      app: ganggpt-web
+      component: frontend
+
+---
+# Web Application Configuration
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ganggpt-web-config
+  namespace: ganggpt-production
+  labels:
+    app: ganggpt-web
+    component: frontend
+data:
+  # Next.js configuration
+  next.config.js: |
+    /** @type {import('next').NextConfig} */
+    const nextConfig = {
+      experimental: {
+        serverComponentsExternalPackages: ['@ganggpt/shared']
+      },
+      typescript: {
+        ignoreBuildErrors: false
+      },
+      eslint: {
+        ignoreDuringBuilds: false
+      },
+      poweredByHeader: false,
+      compress: true,
+      generateEtags: true,
+      httpAgentOptions: {
+        keepAlive: true
+      },
+      onDemandEntries: {
+        maxInactiveAge: 25 * 1000,
+        pagesBufferLength: 2
+      },
+      productionBrowserSourceMaps: false,
+      optimizeFonts: true,
+      images: {
+        domains: ['api.dicebear.com'],
+        formats: ['image/webp', 'image/avif'],
+        minimumCacheTTL: 60,
+        dangerouslyAllowSVG: true,
+        contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;"
+      },
+      headers: async () => [
+        {
+          source: '/(.*)',
+          headers: [
+            {
+              key: 'X-Frame-Options',
+              value: 'DENY'
+            },
+            {
+              key: 'X-Content-Type-Options',
+              value: 'nosniff'
+            },
+            {
+              key: 'Referrer-Policy',
+              value: 'strict-origin-when-cross-origin'
+            },
+            {
+              key: 'Permissions-Policy',
+              value: 'camera=(), microphone=(), geolocation=()'
+            }
+          ]
+        }
+      ]
+    };
+    
+    module.exports = nextConfig;
+  
+  # Client-side configuration
+  app.json: |
+    {
+      "name": "ganggpt-web",
+      "version": "2.0.0",
+      "environment": "production",
+      "features": {
+        "real_time_dashboard": true,
+        "social_features": true,
+        "advanced_analytics": true,
+        "mobile_responsive": true,
+        "dark_mode": true,
+        "accessibility": true
+      },
+      "performance": {
+        "cache_static_assets": true,
+        "lazy_loading": true,
+        "code_splitting": true,
+        "image_optimization": true
+      },
+      "monitoring": {
+        "analytics_enabled": true,
+        "error_tracking": true,
+        "performance_monitoring": true
+      }
+    }

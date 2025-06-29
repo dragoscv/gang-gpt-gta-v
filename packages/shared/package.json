@@ -1,0 +1,59 @@
+{
+    "name": "@ganggpt/shared",
+    "version": "2.0.0",
+    "description": "Shared utilities, types, and constants for GangGPT applications",
+    "private": true,
+    "main": "dist/index.js",
+    "types": "dist/index.d.ts",
+    "exports": {
+        ".": {
+            "import": "./dist/index.js",
+            "require": "./dist/index.js",
+            "types": "./dist/index.d.ts"
+        },
+        "./types": {
+            "import": "./dist/types/index.js",
+            "require": "./dist/types/index.js",
+            "types": "./dist/types/index.d.ts"
+        },
+        "./utils": {
+            "import": "./dist/utils/index.js",
+            "require": "./dist/utils/index.js",
+            "types": "./dist/utils/index.d.ts"
+        },
+        "./constants": {
+            "import": "./dist/constants/index.js",
+            "require": "./dist/constants/index.js",
+            "types": "./dist/constants/index.d.ts"
+        },
+        "./validators": {
+            "import": "./dist/validators/index.js",
+            "require": "./dist/validators/index.js",
+            "types": "./dist/validators/index.d.ts"
+        }
+    },
+    "scripts": {
+        "build": "tsc && tsc-alias",
+        "dev": "tsc --watch",
+        "lint": "eslint src --ext .ts --fix",
+        "typecheck": "tsc --noEmit",
+        "test": "vitest run",
+        "test:watch": "vitest",
+        "clean": "rimraf dist"
+    },
+    "dependencies": {
+        "zod": "^3.22.4",
+        "superjson": "^2.2.2"
+    },
+    "devDependencies": {
+        "@ganggpt/eslint-config": "workspace:*",
+        "@types/node": "^22.9.4",
+        "tsc-alias": "^1.8.8",
+        "typescript": "^5.7.2",
+        "vitest": "^3.2.2"
+    },
+    "engines": {
+        "node": ">=18.0.0",
+        "pnpm": ">=8.0.0"
+    }
+}

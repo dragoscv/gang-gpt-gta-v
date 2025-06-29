@@ -24,7 +24,9 @@
 			"command": "pwsh",
 			"args": [
 				"-ExecutionPolicy", "Bypass",
-				"-File", "scripts/start-dev-all.ps1"
+				"-File", "scripts/dev.ps1",
+				"-Mode", "start",
+				"-Service", "all"
 			],
 			"group": "build",
 			"isBackground": true,
@@ -102,9 +104,11 @@
 		{
 			"label": "GangGPT: Run Tests",
 			"type": "shell",
-			"command": "pnpm",
+			"command": "pwsh",
 			"args": [
-				"test"
+				"-ExecutionPolicy", "Bypass",
+				"-File", "scripts/test.ps1",
+				"-Mode", "unit"
 			],
 			"group": "test",
 			"options": {
@@ -133,7 +137,9 @@
 			"command": "pwsh",
 			"args": [
 				"-ExecutionPolicy", "Bypass",
-				"-File", "scripts/start-dev-watch.ps1"
+				"-File", "scripts/dev.ps1",
+				"-Mode", "watch",
+				"-Service", "all"
 			],
 			"group": "build",
 			"isBackground": true,
@@ -156,7 +162,8 @@
 			"command": "pwsh",
 			"args": [
 				"-ExecutionPolicy", "Bypass",
-				"-File", "scripts/start-service-watch.ps1",
+				"-File", "scripts/dev.ps1",
+				"-Mode", "watch",
 				"-Service", "backend"
 			],
 			"group": "build",
@@ -178,7 +185,8 @@
 			"command": "pwsh",
 			"args": [
 				"-ExecutionPolicy", "Bypass",
-				"-File", "scripts/start-service-watch.ps1",
+				"-File", "scripts/dev.ps1",
+				"-Mode", "watch",
 				"-Service", "frontend"
 			],
 			"group": "build",
@@ -200,7 +208,8 @@
 			"command": "pwsh",
 			"args": [
 				"-ExecutionPolicy", "Bypass",
-				"-File", "scripts/start-service-watch.ps1",
+				"-File", "scripts/dev.ps1",
+				"-Mode", "watch",
 				"-Service", "ragemp"
 			],
 			"group": "build",

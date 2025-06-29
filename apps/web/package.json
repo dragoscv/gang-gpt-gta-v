@@ -1,0 +1,61 @@
+{
+  "name": "@ganggpt/web",
+  "version": "2.0.0",
+  "description": "GangGPT Next.js 15+ frontend application with advanced UI components",
+  "private": true,
+  "scripts": {
+    "dev": "next dev -p 4829",
+    "build": "next build",
+    "start": "next start -p 4829",
+    "lint": "next lint",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "clean": "rimraf .next dist out"
+  },
+  "dependencies": {
+    "@ganggpt/shared": "workspace:*",
+    "@ganggpt/ui": "workspace:*",
+    "@radix-ui/react-dropdown-menu": "^2.1.15",
+    "@radix-ui/react-slot": "^1.2.3",
+    "@radix-ui/react-toast": "^1.1.5",
+    "@tailwindcss/forms": "^0.5.7",
+    "@tailwindcss/typography": "^0.5.10",
+    "@tanstack/react-query": "^5.56.2",
+    "@trpc/client": "^11.4.3",
+    "@trpc/react-query": "^11.4.3",
+    "@trpc/server": "^11.4.3",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.0.0",
+    "date-fns": "^4.1.0",
+    "framer-motion": "^11.11.7",
+    "lucide-react": "^0.456.0",
+    "next": "^15.1.0",
+    "next-themes": "^0.4.4",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "tailwind-merge": "^2.2.0",
+    "zustand": "^5.0.2"
+  },
+  "devDependencies": {
+    "@ganggpt/eslint-config": "workspace:*",
+    "@testing-library/jest-dom": "^6.6.3",
+    "@testing-library/react": "^16.3.0",
+    "@types/node": "^22.9.4",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "@vitejs/plugin-react": "^4.5.1",
+    "@vitest/ui": "^3.2.2",
+    "autoprefixer": "^10.4.21",
+    "jsdom": "^26.1.0",
+    "postcss": "^8.5.4",
+    "tailwindcss": "^3.4.0",
+    "typescript": "^5.7.2",
+    "vitest": "^3.2.2"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "pnpm": ">=8.0.0"
+  }
+}

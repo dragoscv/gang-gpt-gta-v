@@ -1,0 +1,114 @@
+# Production ConfigMap for GangGPT
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ganggpt-config
+  namespace: ganggpt-production
+  labels:
+    app: ganggpt
+    environment: production
+data:
+  # Application Configuration
+  NODE_ENV: "production"
+  LOG_LEVEL: "info"
+  
+  # Frontend Configuration
+  NEXT_TELEMETRY_DISABLED: "1"
+  NEXT_PUBLIC_API_URL: "https://api.ganggpt.com"
+  NEXT_PUBLIC_WS_URL: "wss://api.ganggpt.com"
+  
+  # Backend Configuration
+  PORT: "3001"
+  CORS_ORIGIN: "https://ganggpt.com,https://www.ganggpt.com"
+  
+  # Database Configuration
+  DATABASE_URL: "postgresql://ganggpt:${POSTGRES_PASSWORD}@ganggpt-postgres:5432/ganggpt_prod?schema=public&connection_limit=20&pool_timeout=20"
+  DATABASE_POOL_SIZE: "20"
+  
+  # Redis Configuration
+  REDIS_URL: "redis://ganggpt-redis:6379"
+  REDIS_KEY_PREFIX: "ganggpt:prod:"
+  
+  # AI Configuration
+  AI_MODEL: "gpt-4o-mini"
+  AI_MAX_TOKENS: "4000"
+  AI_TEMPERATURE: "0.7"
+  
+  # Security Configuration
+  BCRYPT_ROUNDS: "12"
+  JWT_EXPIRES_IN: "1h"
+  REFRESH_TOKEN_EXPIRES_IN: "7d"
+  
+  # Rate Limiting
+  RATE_LIMIT_WINDOW_MS: "900000"  # 15 minutes
+  RATE_LIMIT_MAX_REQUESTS: "100"
+  
+  # Monitoring Configuration
+  METRICS_ENABLED: "true"
+  HEALTH_CHECK_INTERVAL: "30"
+  
+  # Performance Configuration
+  CACHE_TTL: "300"  # 5 minutes
+  SESSION_TTL: "86400"  # 24 hours
+  
+---
+# Production Secrets for GangGPT
+apiVersion: v1
+kind: Secret
+metadata:
+  name: ganggpt-secrets
+  namespace: ganggpt-production
+  labels:
+    app: ganggpt
+    environment: production
+type: Opaque
+stringData:
+  # Database Credentials
+  POSTGRES_PASSWORD: "your-secure-postgres-password"
+  DATABASE_ENCRYPTION_KEY: "your-32-character-encryption-key"
+  
+  # JWT Secrets
+  JWT_SECRET: "your-super-secure-jwt-secret-256-bits"
+  REFRESH_TOKEN_SECRET: "your-super-secure-refresh-token-secret"
+  
+  # Azure OpenAI Configuration
+  AZURE_OPENAI_API_KEY: "your-azure-openai-api-key"
+  AZURE_OPENAI_ENDPOINT: "https://your-resource.openai.azure.com/"
+  AZURE_OPENAI_DEPLOYMENT_NAME: "gpt-4o-mini"
+  
+  # External API Keys
+  REDIS_PASSWORD: "your-redis-password"
+  
+  # Monitoring Secrets
+  GRAFANA_ADMIN_PASSWORD: "your-grafana-admin-password"
+  PROMETHEUS_BASIC_AUTH: "your-prometheus-basic-auth"
+  
+  # SSL/TLS Certificates (if needed)
+  TLS_PRIVATE_KEY: |
+    -----BEGIN PRIVATE KEY-----
+    # Your private key here
+    -----END PRIVATE KEY-----
+  
+  TLS_CERTIFICATE: |
+    -----BEGIN CERTIFICATE-----
+    # Your certificate here
+    -----END CERTIFICATE-----
+
+---
+# Horizontal Pod Autoscaler Configuration
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ganggpt-hpa-config
+  namespace: ganggpt-production
+  labels:
+    app: ganggpt
+    environment: production
+data:
+  # HPA Thresholds
+  CPU_TARGET_PERCENTAGE: "70"
+  MEMORY_TARGET_PERCENTAGE: "80"
+  MIN_REPLICAS: "2"
+  MAX_REPLICAS: "10"
+  SCALE_DOWN_PERIOD: "300"  # 5 minutes
+  SCALE_UP_PERIOD: "60"     # 1 minute

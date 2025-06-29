@@ -1,0 +1,14 @@
+{
+	"productid"										: "93b9122497cd407f8d4c3af4af944377",
+	"sandboxid"										: "87411dd3a7604dc4bdb24dda05738d09",
+	"deploymentid"									: "fc74efc248be418d91c558bf63fa6235",
+	"requested_splash"								: "EasyAntiCheat/SplashScreen.png",
+	"title"											: "RAGE Multiplayer",
+	"executable"									: "ragemp_v.exe",
+	"logo_position"									: "bottom-left",
+	"parameters"									: "",
+	"use_cmdline_parameters"						: "1",
+	"working_directory"								: "",
+	"wait_for_game_process_exit"					: "false",
+	"hide_ui_controls"								: "0"
+}

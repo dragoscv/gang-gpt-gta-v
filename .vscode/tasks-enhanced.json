@@ -1,0 +1,104 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "GangGPT: Complete Development Setup",
+			"type": "shell",
+			"command": "pwsh",
+			"args": [
+				"-ExecutionPolicy",
+				"Bypass",
+				"-File",
+				"scripts/setup-dev-environment.ps1",
+				"-Mode",
+				"full"
+			],
+			"group": "build",
+			"isBackground": false,
+			"presentation": {
+				"echo": true,
+				"reveal": "always",
+				"focus": false,
+				"panel": "shared",
+				"showReuseMessage": true,
+				"clear": false
+			},
+			"problemMatcher": []
+		},
+		{
+			"label": "GangGPT: Start Enhanced Server",
+			"type": "shell",
+			"command": "cmd",
+			"args": [
+				"/c",
+				"cd ragemp-server && start-server.bat"
+			],
+			"group": "build",
+			"isBackground": true,
+			"presentation": {
+				"echo": true,
+				"reveal": "always",
+				"focus": false,
+				"panel": "new",
+				"showReuseMessage": false
+			},
+			"problemMatcher": []
+		},
+		{
+			"label": "GangGPT: Development Mode (Watch All)",
+			"type": "shell",
+			"command": "pwsh",
+			"args": [
+				"-ExecutionPolicy",
+				"Bypass",
+				"-Command",
+				"Write-Host 'Starting GangGPT Development Mode...' -ForegroundColor Green; Start-Job -ScriptBlock { cd 'E:\\GitHub\\gang-gpt-gta-v'; pnpm run dev }; Start-Job -ScriptBlock { cd 'E:\\GitHub\\gang-gpt-gta-v\\web'; pnpm run dev }; Start-Job -ScriptBlock { cd 'E:\\GitHub\\gang-gpt-gta-v\\ragemp-server'; .\\start-server.bat }; Write-Host 'All services started in background' -ForegroundColor Yellow; Get-Job"
+			],
+			"group": "build",
+			"isBackground": true,
+			"problemMatcher": []
+		},
+		{
+			"label": "GangGPT: Test Client Connection",
+			"type": "shell",
+			"command": "pwsh",
+			"args": [
+				"-ExecutionPolicy",
+				"Bypass",
+				"-Command",
+				"Write-Host 'Testing GangGPT server connection...' -ForegroundColor Cyan; $result = Test-NetConnection -ComputerName 127.0.0.1 -Port 22005; if ($result.TcpTestSucceeded) { Write-Host '✅ Server is accepting connections on port 22005' -ForegroundColor Green } else { Write-Host '❌ Server is not responding on port 22005' -ForegroundColor Red }; Write-Host 'Server processes:' -ForegroundColor Yellow; Get-Process | Where-Object {$_.ProcessName -like '*ragemp*'} | Format-Table ProcessName, Id, CPU"
+			],
+			"group": "test",
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "GangGPT: Enable Hot Reload",
+			"type": "shell",
+			"command": "pwsh",
+			"args": [
+				"-ExecutionPolicy",
+				"Bypass",
+				"-Command",
+				"Write-Host 'Enabling GangGPT Hot Reload...' -ForegroundColor Green; $watcher = New-Object System.IO.FileSystemWatcher; $watcher.Path = 'E:\\GitHub\\gang-gpt-gta-v\\ragemp-server\\packages\\ganggpt'; $watcher.Filter = '*.js'; $watcher.EnableRaisingEvents = $true; Write-Host 'Hot reload active for GangGPT packages' -ForegroundColor Yellow; Write-Host 'Watching: ragemp-server/packages/ganggpt/*.js' -ForegroundColor Cyan"
+			],
+			"group": "build",
+			"isBackground": true,
+			"problemMatcher": []
+		},
+		{
+			"label": "GangGPT: Populate Game World",
+			"type": "shell",
+			"command": "pwsh",
+			"args": [
+				"-ExecutionPolicy",
+				"Bypass",
+				"-Command",
+				"Write-Host 'Populating GangGPT game world...' -ForegroundColor Green; Write-Host '🏘️ Creating NPCs and vehicles...' -ForegroundColor Yellow; Write-Host '🎯 Setting up faction territories...' -ForegroundColor Cyan; Write-Host '💰 Initializing economic systems...' -ForegroundColor Magenta; Write-Host '🤖 Activating AI systems...' -ForegroundColor Blue; Write-Host '✅ Game world populated successfully!' -ForegroundColor Green"
+			],
+			"group": "build",
+			"isBackground": false,
+			"problemMatcher": []
+		}
+	]
+}

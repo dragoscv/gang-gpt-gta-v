@@ -1,0 +1,46 @@
+{
+    "name": "@ganggpt/ai",
+    "version": "1.0.0",
+    "description": "Shared AI utilities and services for GangGPT",
+    "main": "dist/index.js",
+    "types": "dist/index.d.ts",
+    "files": [
+        "dist",
+        "src"
+    ],
+    "scripts": {
+        "build": "tsup",
+        "dev": "tsup --watch",
+        "type-check": "tsc --noEmit",
+        "lint": "eslint src --ext .ts",
+        "clean": "rimraf dist"
+    },
+    "dependencies": {
+        "@azure/openai": "^1.0.0-beta.12",
+        "@ganggpt/shared": "workspace:*",
+        "zod": "^3.22.4",
+        "openai": "^4.24.1",
+        "langchain": "^0.1.0",
+        "@langchain/core": "^0.1.0",
+        "@langchain/openai": "^0.0.14",
+        "uuid": "^9.0.1"
+    },
+    "devDependencies": {
+        "@ganggpt/eslint-config": "workspace:*",
+        "@types/uuid": "^9.0.7",
+        "eslint": "^8.56.0",
+        "rimraf": "^5.0.5",
+        "tsup": "^8.0.1",
+        "typescript": "^5.3.3"
+    },
+    "exports": {
+        ".": {
+            "types": "./dist/index.d.ts",
+            "import": "./dist/index.js",
+            "require": "./dist/index.js"
+        }
+    },
+    "publishConfig": {
+        "access": "restricted"
+    }
+}

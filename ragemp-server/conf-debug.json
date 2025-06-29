@@ -1,0 +1,12 @@
+{
+    "maxplayers": 10,
+    "port": 22005,
+    "name": "GangGPT Debug Test",
+    "announce": false,
+    "gamemode": "freeroam",
+    "csharp": "disabled",
+    "allow-cef-debugging": true,
+    "packages": [
+        "ganggpt"
+    ]
+}

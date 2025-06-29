@@ -1,0 +1,7 @@
+{
+    "maxplayers": 10,
+    "port": 22005,
+    "name": "GangGPT Connection Test",
+    "announce": false,
+    "gamemode": "freeroam"
+}

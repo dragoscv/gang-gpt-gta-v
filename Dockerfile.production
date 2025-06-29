@@ -1,0 +1,155 @@
+# Production Multi-Stage Dockerfile for GangGPT
+# Optimized for performance, security, and size
+
+# Stage 1: Base dependencies
+FROM node:20-alpine AS base
+RUN apk add --no-cache libc6-compat
+WORKDIR /app
+
+# Install pnpm globally
+RUN npm install -g pnpm@9.12.0
+
+# Copy package files
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY packages/*/package.json ./packages/*/
+COPY apps/*/package.json ./apps/*/
+
+# Stage 2: Dependencies installation
+FROM base AS deps
+# Install all dependencies including devDependencies
+RUN pnpm install --frozen-lockfile
+
+# Stage 3: Build stage
+FROM base AS builder
+WORKDIR /app
+
+# Copy dependencies from deps stage
+COPY --from=deps /app/node_modules ./node_modules
+COPY --from=deps /app/packages ./packages
+COPY --from=deps /app/apps ./apps
+
+# Copy source code
+COPY . .
+
+# Build packages first
+RUN pnpm --filter "@ganggpt/shared" build
+RUN pnpm --filter "@ganggpt/ui" build
+
+# Build applications
+RUN pnpm --filter "@ganggpt/web" build
+RUN pnpm --filter "@ganggpt/backend" build
+
+# Prune dev dependencies
+RUN pnpm prune --prod --no-optional
+
+# Stage 4: Web application runner
+FROM node:20-alpine AS web
+RUN apk add --no-cache libc6-compat dumb-init
+
+# Create non-root user for security
+RUN addgroup --system --gid 1001 ganggpt
+RUN adduser --system --uid 1001 ganggpt
+
+WORKDIR /app
+
+# Install pnpm
+RUN npm install -g pnpm@9.12.0
+
+# Copy built application and dependencies
+COPY --from=builder --chown=ganggpt:ganggpt /app/apps/web/.next ./apps/web/.next
+COPY --from=builder --chown=ganggpt:ganggpt /app/apps/web/public ./apps/web/public
+COPY --from=builder --chown=ganggpt:ganggpt /app/apps/web/package.json ./apps/web/
+COPY --from=builder --chown=ganggpt:ganggpt /app/packages ./packages
+COPY --from=builder --chown=ganggpt:ganggpt /app/node_modules ./node_modules
+COPY --from=builder --chown=ganggpt:ganggpt /app/package.json ./
+COPY --from=builder --chown=ganggpt:ganggpt /app/pnpm-workspace.yaml ./
+
+# Set environment variables
+ENV NODE_ENV=production
+ENV PORT=3000
+ENV NEXT_TELEMETRY_DISABLED=1
+
+# Security: Run as non-root user
+USER ganggpt
+
+EXPOSE 3000
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
+  CMD node --input-type=module --eval "
+    import { request } from 'http';
+    const req = request('http://localhost:3000/api/health', (res) => {
+      process.exit(res.statusCode === 200 ? 0 : 1);
+    });
+    req.on('error', () => process.exit(1));
+    req.end();
+  "
+
+# Use dumb-init for proper signal handling
+ENTRYPOINT ["dumb-init", "--"]
+CMD ["pnpm", "--filter", "@ganggpt/web", "start"]
+
+# Stage 5: Backend application runner
+FROM node:20-alpine AS backend
+RUN apk add --no-cache libc6-compat dumb-init
+
+# Create non-root user for security
+RUN addgroup --system --gid 1001 ganggpt
+RUN adduser --system --uid 1001 ganggpt
+
+WORKDIR /app
+
+# Install pnpm
+RUN npm install -g pnpm@9.12.0
+
+# Copy built application and dependencies
+COPY --from=builder --chown=ganggpt:ganggpt /app/apps/backend/dist ./apps/backend/dist
+COPY --from=builder --chown=ganggpt:ganggpt /app/apps/backend/package.json ./apps/backend/
+COPY --from=builder --chown=ganggpt:ganggpt /app/packages ./packages
+COPY --from=builder --chown=ganggpt:ganggpt /app/node_modules ./node_modules
+COPY --from=builder --chown=ganggpt:ganggpt /app/package.json ./
+COPY --from=builder --chown=ganggpt:ganggpt /app/pnpm-workspace.yaml ./
+
+# Set environment variables
+ENV NODE_ENV=production
+ENV PORT=3001
+
+# Security: Run as non-root user
+USER ganggpt
+
+EXPOSE 3001
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
+  CMD node --input-type=module --eval "
+    import { request } from 'http';
+    const req = request('http://localhost:3001/api/health', (res) => {
+      process.exit(res.statusCode === 200 ? 0 : 1);
+    });
+    req.on('error', () => process.exit(1));
+    req.end();
+  "
+
+# Use dumb-init for proper signal handling
+ENTRYPOINT ["dumb-init", "--"]
+CMD ["pnpm", "--filter", "@ganggpt/backend", "start"]
+
+# Stage 6: Development environment
+FROM base AS development
+WORKDIR /app
+
+# Copy all dependencies
+COPY --from=deps /app/node_modules ./node_modules
+COPY . .
+
+# Install development tools
+RUN pnpm install -g nodemon @types/node
+
+# Set development environment
+ENV NODE_ENV=development
+
+# Development ports
+EXPOSE 3000 3001 5555
+
+# Development command
+CMD ["pnpm", "dev"]

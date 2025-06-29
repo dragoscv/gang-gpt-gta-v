@@ -1,0 +1,210 @@
+# Redis Deployment for Caching and Session Management
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ganggpt-redis
+  namespace: ganggpt-production
+  labels:
+    app: ganggpt-redis
+    component: cache
+    environment: production
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ganggpt-redis
+  template:
+    metadata:
+      labels:
+        app: ganggpt-redis
+        component: cache
+    spec:
+      securityContext:
+        fsGroup: 999
+        runAsUser: 999
+        runAsNonRoot: true
+      containers:
+      - name: redis
+        image: redis:7-alpine
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 6379
+          name: redis
+        env:
+        - name: REDIS_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: ganggpt-secrets
+              key: REDIS_PASSWORD
+        command:
+        - redis-server
+        - /etc/redis/redis.conf
+        volumeMounts:
+        - name: redis-config
+          mountPath: /etc/redis
+          readOnly: true
+        - name: redis-data
+          mountPath: /data
+        resources:
+          requests:
+            cpu: 100m
+            memory: 256Mi
+          limits:
+            cpu: 500m
+            memory: 1Gi
+        livenessProbe:
+          exec:
+            command:
+            - redis-cli
+            - ping
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          exec:
+            command:
+            - redis-cli
+            - ping
+          initialDelaySeconds: 5
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 3
+        startupProbe:
+          exec:
+            command:
+            - redis-cli
+            - ping
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 30
+      volumes:
+      - name: redis-config
+        configMap:
+          name: redis-config
+          items:
+          - key: redis.conf
+            path: redis.conf
+      - name: redis-data
+        persistentVolumeClaim:
+          claimName: redis-storage
+
+---
+# Redis Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: ganggpt-redis
+  namespace: ganggpt-production
+  labels:
+    app: ganggpt-redis
+    component: cache
+spec:
+  type: ClusterIP
+  ports:
+  - port: 6379
+    targetPort: 6379
+    protocol: TCP
+    name: redis
+  selector:
+    app: ganggpt-redis
+
+---
+# Redis Persistent Volume Claim
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: redis-storage
+  namespace: ganggpt-production
+  labels:
+    app: ganggpt-redis
+    component: cache
+spec:
+  accessModes:
+  - ReadWriteOnce
+  storageClassName: "fast-ssd"
+  resources:
+    requests:
+      storage: 10Gi
+
+---
+# Redis Configuration
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: redis-config
+  namespace: ganggpt-production
+  labels:
+    app: ganggpt-redis
+data:
+  redis.conf: |
+    # Network Configuration
+    bind 0.0.0.0
+    port 6379
+    timeout 300
+    tcp-keepalive 60
+    
+    # Authentication
+    requirepass ${REDIS_PASSWORD}
+    
+    # Memory Management
+    maxmemory 800mb
+    maxmemory-policy allkeys-lru
+    
+    # Persistence Configuration
+    save 900 1
+    save 300 10
+    save 60 10000
+    stop-writes-on-bgsave-error yes
+    rdbcompression yes
+    rdbchecksum yes
+    dbfilename dump.rdb
+    dir /data
+    
+    # AOF Configuration
+    appendonly yes
+    appendfilename "appendonly.aof"
+    appendfsync everysec
+    no-appendfsync-on-rewrite no
+    auto-aof-rewrite-percentage 100
+    auto-aof-rewrite-min-size 64mb
+    
+    # Logging
+    loglevel notice
+    logfile ""
+    
+    # Performance Tuning
+    hash-max-ziplist-entries 512
+    hash-max-ziplist-value 64
+    list-max-ziplist-size -2
+    list-compress-depth 0
+    set-max-intset-entries 512
+    zset-max-ziplist-entries 128
+    zset-max-ziplist-value 64
+    hll-sparse-max-bytes 3000
+    stream-node-max-bytes 4096
+    stream-node-max-entries 100
+    
+    # Security
+    protected-mode yes
+    
+    # Client Configuration
+    tcp-backlog 511
+    databases 16
+    
+    # Slow Log
+    slowlog-log-slower-than 10000
+    slowlog-max-len 128
+    
+    # Latency Monitoring
+    latency-monitor-threshold 100
+    
+    # Notifications
+    notify-keyspace-events ""
+    
+    # Advanced Configuration
+    hz 10
+    dynamic-hz yes
+    aof-rewrite-incremental-fsync yes
+    rdb-save-incremental-fsync yes

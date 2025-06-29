@@ -1,0 +1,238 @@
+# PostgreSQL Production Deployment with High Availability
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: ganggpt-postgres
+  namespace: ganggpt-production
+  labels:
+    app: ganggpt-postgres
+    component: database
+    environment: production
+spec:
+  serviceName: ganggpt-postgres
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ganggpt-postgres
+  template:
+    metadata:
+      labels:
+        app: ganggpt-postgres
+        component: database
+    spec:
+      securityContext:
+        fsGroup: 999
+        runAsUser: 999
+        runAsNonRoot: true
+      containers:
+      - name: postgres
+        image: postgres:16-alpine
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 5432
+          name: postgres
+        env:
+        - name: POSTGRES_DB
+          value: "ganggpt_prod"
+        - name: POSTGRES_USER
+          value: "ganggpt"
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: ganggpt-secrets
+              key: POSTGRES_PASSWORD
+        - name: POSTGRES_INITDB_ARGS
+          value: "--auth-host=scram-sha-256"
+        - name: PGDATA
+          value: "/var/lib/postgresql/data/pgdata"
+        volumeMounts:
+        - name: postgres-storage
+          mountPath: /var/lib/postgresql/data
+        - name: postgres-config
+          mountPath: /etc/postgresql/postgresql.conf
+          subPath: postgresql.conf
+          readOnly: true
+        - name: postgres-init
+          mountPath: /docker-entrypoint-initdb.d
+          readOnly: true
+        resources:
+          requests:
+            cpu: 500m
+            memory: 1Gi
+          limits:
+            cpu: 2000m
+            memory: 4Gi
+        livenessProbe:
+          exec:
+            command:
+            - /bin/sh
+            - -c
+            - exec pg_isready -U ganggpt -h 127.0.0.1 -p 5432
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 6
+        readinessProbe:
+          exec:
+            command:
+            - /bin/sh
+            - -c
+            - exec pg_isready -U ganggpt -h 127.0.0.1 -p 5432
+          initialDelaySeconds: 5
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 3
+        startupProbe:
+          exec:
+            command:
+            - /bin/sh
+            - -c
+            - exec pg_isready -U ganggpt -h 127.0.0.1 -p 5432
+          initialDelaySeconds: 10
+          periodSeconds: 10
+          timeoutSeconds: 3
+          failureThreshold: 30
+      volumes:
+      - name: postgres-config
+        configMap:
+          name: postgres-config
+          items:
+          - key: postgresql.conf
+            path: postgresql.conf
+      - name: postgres-init
+        configMap:
+          name: postgres-init-scripts
+          defaultMode: 0755
+  volumeClaimTemplates:
+  - metadata:
+      name: postgres-storage
+      labels:
+        app: ganggpt-postgres
+    spec:
+      accessModes: ["ReadWriteOnce"]
+      storageClassName: "fast-ssd"
+      resources:
+        requests:
+          storage: 100Gi
+
+---
+# PostgreSQL Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: ganggpt-postgres
+  namespace: ganggpt-production
+  labels:
+    app: ganggpt-postgres
+    component: database
+spec:
+  type: ClusterIP
+  ports:
+  - port: 5432
+    targetPort: 5432
+    protocol: TCP
+    name: postgres
+  selector:
+    app: ganggpt-postgres
+
+---
+# PostgreSQL Configuration
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: postgres-config
+  namespace: ganggpt-production
+  labels:
+    app: ganggpt-postgres
+data:
+  postgresql.conf: |
+    # Performance Tuning for Production
+    max_connections = 200
+    shared_buffers = 256MB
+    effective_cache_size = 1GB
+    maintenance_work_mem = 64MB
+    checkpoint_completion_target = 0.7
+    wal_buffers = 16MB
+    default_statistics_target = 100
+    random_page_cost = 1.1
+    effective_io_concurrency = 200
+    work_mem = 4MB
+    min_wal_size = 1GB
+    max_wal_size = 4GB
+    max_worker_processes = 8
+    max_parallel_workers_per_gather = 4
+    max_parallel_workers = 8
+    max_parallel_maintenance_workers = 4
+    
+    # Logging Configuration
+    log_destination = 'stderr'
+    logging_collector = on
+    log_directory = 'log'
+    log_filename = 'postgresql-%Y-%m-%d_%H%M%S.log'
+    log_file_mode = 0640
+    log_rotation_age = 1d
+    log_rotation_size = 10MB
+    log_min_duration_statement = 1000
+    log_checkpoints = on
+    log_connections = on
+    log_disconnections = on
+    log_lock_waits = on
+    log_temp_files = 0
+    
+    # Security Settings
+    ssl = on
+    ssl_ciphers = 'HIGH:MEDIUM:+3DES:!aNULL'
+    ssl_prefer_server_ciphers = on
+    
+    # Replication Settings (for future HA setup)
+    wal_level = replica
+    max_wal_senders = 3
+    max_replication_slots = 3
+    hot_standby = on
+
+---
+# PostgreSQL Initialization Scripts
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: postgres-init-scripts
+  namespace: ganggpt-production
+  labels:
+    app: ganggpt-postgres
+data:
+  01-init-db.sql: |
+    -- Create extensions
+    CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+    CREATE EXTENSION IF NOT EXISTS "pgcrypto";
+    CREATE EXTENSION IF NOT EXISTS "btree_gin";
+    
+    -- Create read-only user for monitoring
+    CREATE USER ganggpt_monitor WITH PASSWORD 'monitor_password';
+    GRANT CONNECT ON DATABASE ganggpt_prod TO ganggpt_monitor;
+    GRANT USAGE ON SCHEMA public TO ganggpt_monitor;
+    GRANT SELECT ON ALL TABLES IN SCHEMA public TO ganggpt_monitor;
+    
+    -- Create backup user
+    CREATE USER ganggpt_backup WITH PASSWORD 'backup_password';
+    GRANT CONNECT ON DATABASE ganggpt_prod TO ganggpt_backup;
+    GRANT USAGE ON SCHEMA public TO ganggpt_backup;
+    GRANT SELECT ON ALL TABLES IN SCHEMA public TO ganggpt_backup;
+    
+    -- Performance optimizations
+    ALTER DATABASE ganggpt_prod SET shared_preload_libraries = 'pg_stat_statements';
+    
+  02-performance-tuning.sql: |
+    -- Create indexes for better performance
+    -- These will be created by Prisma migrations, but kept for reference
+    
+    -- Optimize queries
+    ANALYZE;
+    
+    -- Set up automatic statistics collection
+    ALTER SYSTEM SET track_activities = on;
+    ALTER SYSTEM SET track_counts = on;
+    ALTER SYSTEM SET track_io_timing = on;
+    ALTER SYSTEM SET track_functions = 'all';
+    
+    -- Reload configuration
+    SELECT pg_reload_conf();

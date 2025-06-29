@@ -18,7 +18,10 @@ param(
 Write-Host "🎮 GangGPT Game Launcher" -ForegroundColor Green
 Write-Host "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━" -ForegroundColor DarkGray
 
-# Common RAGE:MP paths
+# Local RAGE:MP executable (prioritized)
+$localRagePath = Join-Path $PSScriptRoot "ragemp_v.exe"
+
+# Common RAGE:MP paths (fallback)
 $rageUpdaterPaths = @(
     "C:\RAGEMP\updater.exe",
     "C:\RageMP\updater.exe", 
@@ -27,6 +30,7 @@ $rageUpdaterPaths = @(
 )
 
 $rageClientPaths = @(
+    $localRagePath,  # Local project executable first
     "C:\RAGEMP\ragemp_v.exe",
     "C:\RageMP\ragemp_v.exe",
     "C:\Program Files\RAGE Multiplayer\ragemp_v.exe", 
@@ -36,16 +40,25 @@ $rageClientPaths = @(
 function Find-RageMP {
     Write-Host "🔍 Looking for RAGE:MP installation..." -ForegroundColor Cyan
     
-    # Try to find updater first
-    foreach ($path in $rageUpdaterPaths) {
-        if (Test-Path $path) {
-            Write-Host "✅ Found RAGE:MP updater: $path" -ForegroundColor Green
-            return @{ Type = "Updater"; Path = $path }
+    # First check for local project executable
+    if (Test-Path $localRagePath) {
+        Write-Host "✅ Found local RAGE:MP client: $localRagePath" -ForegroundColor Green
+        Write-Host "🎯 Using project-local executable (recommended)" -ForegroundColor Cyan
+        return @{ Type = "Client"; Path = $localRagePath }
+    }
+    
+    # Try to find updater second (if user wants to use external installation)
+    if (-not $SkipUpdater) {
+        foreach ($path in $rageUpdaterPaths) {
+            if (Test-Path $path) {
+                Write-Host "✅ Found RAGE:MP updater: $path" -ForegroundColor Green
+                return @{ Type = "Updater"; Path = $path }
+            }
         }
     }
     
-    # Try to find client executable
-    foreach ($path in $rageClientPaths) {
+    # Try to find external client executable
+    foreach ($path in $rageClientPaths[1..($rageClientPaths.Length-1)]) {  # Skip local path (already checked)
         if (Test-Path $path) {
             Write-Host "✅ Found RAGE:MP client: $path" -ForegroundColor Green
             return @{ Type = "Client"; Path = $path }
@@ -161,13 +174,15 @@ function Launch-RageMP {
         }
         
     } elseif ($RageInfo.Type -eq "Client") {
-        # Direct client launch with server parameter
+        # Direct client launch with server parameter and admin privileges
         try {
-            Start-Process -FilePath $RageInfo.Path -ArgumentList "--connect", $Server -ErrorAction Stop
-            Write-Host "✅ RAGE:MP client launched successfully!" -ForegroundColor Green
+            Write-Host "🔑 Requesting administrator privileges for RAGE:MP client..." -ForegroundColor Yellow
+            Start-Process -FilePath $RageInfo.Path -ArgumentList "--connect", $Server -Verb RunAs -ErrorAction Stop
+            Write-Host "✅ RAGE:MP client launched successfully with admin privileges!" -ForegroundColor Green
             return $true
         } catch {
             Write-Host "❌ Failed to launch client: $($_.Exception.Message)" -ForegroundColor Red
+            Write-Host "💡 Make sure to click 'Yes' when prompted for administrator privileges" -ForegroundColor Cyan
             return $false
         }
     }

@@ -1,0 +1,7 @@
+{
+    "maxplayers": 10,
+    "name": "Test Server",
+    "gamemode": "Test",
+    "port": 22007,
+    "csharp": "disabled"
+}
